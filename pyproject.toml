@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pagonic"
+version = "0.3.0"
+description = "A Python ZIP compression library with a CLI and optional PyQt6 GUI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Pagonic contributors" }]
+keywords = ["zip", "compression", "archive", "cli", "gui"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Archiving :: Compression",
+]
+dependencies = [
+    "typing-extensions>=4.6.0",
+    "colorama>=0.4.6",
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "psutil>=5.9.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2.0",
+    "coverage>=7.0.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+]
+gui = ["PyQt6>=6.6.0"]
+
+[project.scripts]
+pagonic = "Pagonic.cli.main:cli"
+pagonic-gui = "Pagonic.gui.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["Pagonic*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short"
+markers = [
+    "comprehensive: mark test as comprehensive",
+    "slow: mark test as slow-running",
+]
+
+[tool.coverage.run]
+source = ["Pagonic"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
