@@ -1,0 +1,44 @@
+# Python bytecode and caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.hypothesis/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Coverage and test output
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+test_output*/
+output/
+
+# Build and packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Local editor and tool state
+.vscode/
+.idea/
+.mcp.json
+
+# Generated archives and local scratch outputs
+*.zip
+*.log
+*.tmp
+output.mp3
+
+# Old local planning and experiment folders
+Archive/
+YeniPlan/
+md_planlar/
+gun_testleri/
+Doğrulama Ve Test Sonuçları/
+doğrulama_ve_test_sonuçları/
