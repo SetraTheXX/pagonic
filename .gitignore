@@ -39,3 +39,6 @@ output.mp3
 *_plans/
 *_experiments/
 scratch/
+
+# Private planning notes
+PRIVATE_*.md
