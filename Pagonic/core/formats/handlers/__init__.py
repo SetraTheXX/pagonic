@@ -10,7 +10,6 @@ from typing import List, Type, Optional, Dict
 from ..base import FormatHandler
 from ..errors import ValidationError
 
-# [DAY 1] ZIP handler import - restored after fix
 from .zip_handler import ZipHandler, register_zip_handler
 
 def discover_handlers(custom_dir: Optional[str] = None) -> List[Type[FormatHandler]]:
@@ -79,9 +78,7 @@ def register_handlers(priority_map: Optional[Dict] = None, custom_dir: Optional[
         FormatHandler.register(handler_class, priority=priority)
 
 # Uygulama başladığında handler'ları otomatik kaydet
-# [DAY 1] ZIP handler priority ayarlandı
 register_handlers({
-    'zip': 100,  # ZIP en yüksek öncelikli - [DAY 1] eklendi
     '7z': 90,    # 7Z ikinci öncelikli
     'rar': 80,   # RAR üçüncü öncelikli
 })

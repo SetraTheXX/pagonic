@@ -1,5 +1,4 @@
 """
-ZIP Format Parser Altyapısı - Gün 7 Phase 0.1
 ============================================
 PAGONIC projesi için ZIP dosyalarının iç yapısını ayrıştıran modüler parser.
 

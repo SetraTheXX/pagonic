@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pagonic"
 version = "0.3.0"
-description = "A Python ZIP compression library with a CLI and optional PyQt6 GUI."
+description = "A security-aware Python ZIP inspection and safe extraction toolkit."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Pagonic contributors" }]
-keywords = ["zip", "compression", "archive", "cli", "gui"]
+keywords = ["zip", "archive", "inspection", "safe-extraction", "cli"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",

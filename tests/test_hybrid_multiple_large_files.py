@@ -8,7 +8,6 @@ Bug Location: zip_handler.py line 668
 Bug: break statement in for loop caused only first large file to be processed
 Fix: Removed break statement
 
-GUN 1 - Phase 1 Critical Bug Fix Test
 """
 
 import tempfile

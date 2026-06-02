@@ -3,7 +3,6 @@ Security Tests - ZIP Bomb Detection
 ===================================
 Tests for validate_zip_safety() function to prevent ZIP bomb attacks.
 
-Phase 1 Day 2 - Security Fixes
 """
 
 import pytest

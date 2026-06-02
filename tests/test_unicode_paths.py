@@ -3,7 +3,6 @@ Unicode and Path Handling Tests
 ================================
 Tests for UTF-8 filename encoding and cross-platform path normalization.
 
-Day 18-20: Phase 2 Unicode & Path Handling implementation.
 """
 
 import os

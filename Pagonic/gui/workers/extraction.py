@@ -3,7 +3,6 @@ Extraction Worker
 =================
 QThread worker for non-blocking extraction operations.
 
-Phase 3, Week 6: GUI Development
 """
 
 import os

@@ -2,14 +2,13 @@
 Pagonic CLI Tests
 =================
 Test suite for Pagonic command-line interface.
-
-Phase 3, Week 5: CLI Development
-Days 31-35: CLI Testing
 """
 
 import os
 import pytest
 import tempfile
+import json
+import zipfile
 from pathlib import Path
 from click.testing import CliRunner
 
@@ -73,6 +72,9 @@ class TestHelpCommand:
         assert 'extract' in result.output
         assert 'list' in result.output
         assert 'info' in result.output
+        assert 'inspect' in result.output
+        assert 'verify' in result.output
+        assert 'safe-extract' in result.output
         assert 'benchmark' in result.output
         assert 'config' in result.output
     
@@ -225,6 +227,21 @@ class TestListCommand:
             # Long format should show more columns
             assert 'Compressed' in result.output or 'Ratio' in result.output
 
+    def test_list_tree_format(self, runner):
+        """Test list with tree output."""
+        with runner.isolated_filesystem():
+            Path('docs').mkdir()
+            Path('docs/readme.txt').write_text("Readme")
+            Path('docs/guide.txt').write_text("Guide")
+            runner.invoke(cli, ['compress', 'docs', '-o', 'docs.zip'])
+
+            result = runner.invoke(cli, ['list', 'docs.zip', '--tree'])
+
+            assert result.exit_code == 0
+            assert 'docs.zip' in result.output
+            assert 'readme.txt' in result.output
+            assert 'guide.txt' in result.output
+
 
 class TestInfoCommand:
     """Tests for info command."""
@@ -241,6 +258,141 @@ class TestInfoCommand:
             assert 'test.zip' in result.output
             # Should show statistics
             assert 'Files' in result.output or 'Size' in result.output
+
+
+class TestInspectCommand:
+    """Tests for inspect command."""
+
+    def test_inspect_clean_archive(self, runner):
+        with runner.isolated_filesystem():
+            Path('safe.txt').write_text("Safe content")
+            runner.invoke(cli, ['compress', 'safe.txt', '-o', 'safe.zip'])
+
+            result = runner.invoke(cli, ['inspect', 'safe.zip'])
+
+            assert result.exit_code == 0
+            assert 'ZIP Inspection' in result.output
+            assert 'OK' in result.output
+
+    def test_inspect_json_output(self, runner):
+        with runner.isolated_filesystem():
+            Path('safe.txt').write_text("Safe content")
+            runner.invoke(cli, ['compress', 'safe.txt', '-o', 'safe.zip'])
+
+            result = runner.invoke(cli, ['inspect', 'safe.zip', '--json'])
+
+            assert result.exit_code == 0
+            payload = json.loads(result.output)
+            assert payload['risk_level'] == 'ok'
+            assert payload['entries'][0]['filename'] == 'safe.txt'
+
+    def test_inspect_markdown_output(self, runner):
+        with runner.isolated_filesystem():
+            Path('safe.txt').write_text("Safe content")
+            runner.invoke(cli, ['compress', 'safe.txt', '-o', 'safe.zip'])
+
+            result = runner.invoke(cli, ['inspect', 'safe.zip', '--markdown'])
+
+            assert result.exit_code == 0
+            assert '# ZIP Inspection Report' in result.output
+            assert 'safe.txt' in result.output
+
+    def test_inspect_reports_risky_archive(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('risky.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('../../evil.txt', 'nope')
+                archive.writestr(r'C:\Users\Admin\file.doc', 'data')
+
+            result = runner.invoke(cli, ['inspect', 'risky.zip', '--json'])
+
+            assert result.exit_code == 0
+            payload = json.loads(result.output)
+            flags = {flag for entry in payload['entries'] for flag in entry['risk_flags']}
+            assert payload['risk_level'] == 'high'
+            assert 'path_traversal' in flags
+            assert 'windows_drive_path' in flags
+
+    def test_inspect_rejects_multiple_output_formats(self, runner):
+        with runner.isolated_filesystem():
+            Path('safe.txt').write_text("Safe content")
+            runner.invoke(cli, ['compress', 'safe.txt', '-o', 'safe.zip'])
+
+            result = runner.invoke(cli, ['inspect', 'safe.zip', '--json', '--markdown'])
+
+            assert result.exit_code == 1
+            assert 'Use only one output format' in result.output
+
+
+class TestVerifyCommand:
+    """Tests for verify command."""
+
+    def test_verify_clean_archive_exits_zero(self, runner):
+        with runner.isolated_filesystem():
+            Path('safe.txt').write_text("Safe content")
+            runner.invoke(cli, ['compress', 'safe.txt', '-o', 'safe.zip'])
+
+            result = runner.invoke(cli, ['verify', 'safe.zip'])
+
+            assert result.exit_code == 0
+            assert 'OK' in result.output
+
+    def test_verify_risky_archive_exits_one(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('risky.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('../../evil.txt', 'nope')
+
+            result = runner.invoke(cli, ['verify', 'risky.zip'])
+
+            assert result.exit_code == 1
+            assert 'FAILED' in result.output
+            assert 'path_traversal' in result.output
+
+    def test_verify_medium_risk_exits_one(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('suspicious.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('payload.exe', 'MZ')
+
+            result = runner.invoke(cli, ['verify', 'suspicious.zip'])
+
+            assert result.exit_code == 1
+            assert 'suspicious_extension' in result.output
+
+
+class TestSafeExtractCommand:
+    """Tests for safe-extract command."""
+
+    def test_safe_extract_clean_archive(self, runner):
+        with runner.isolated_filesystem():
+            Path('safe.txt').write_text("Safe content")
+            runner.invoke(cli, ['compress', 'safe.txt', '-o', 'safe.zip'])
+
+            result = runner.invoke(cli, ['safe-extract', 'safe.zip', 'out'])
+
+            assert result.exit_code == 0
+            assert 'Extracted' in result.output
+            assert Path('out/safe.txt').exists()
+
+    def test_safe_extract_refuses_high_risk_by_default(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('risky.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('../../evil.txt', 'nope')
+
+            result = runner.invoke(cli, ['safe-extract', 'risky.zip', 'out'])
+
+            assert result.exit_code == 1
+            assert 'Refused' in result.output
+            assert not Path('out/evil.txt').exists()
+
+    def test_safe_extract_override_keeps_output_inside_target(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('risky.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('../../evil.txt', 'nope')
+
+            result = runner.invoke(cli, ['safe-extract', 'risky.zip', 'out', '--allow-risk', 'high'])
+
+            assert result.exit_code == 0
+            assert Path('out/evil.txt').exists()
+            assert not Path('evil.txt').exists()
 
 
 class TestConfigCommand:

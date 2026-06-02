@@ -5,8 +5,6 @@ Buffer Pool ve Decompressor Pool Optimizasyonu
 Bu modül ZIP dosyalarının açılması sırasında bellek fragmentasyonunu önlemek
 ve zlib decompressor nesnelerini yeniden kullanmak için geliştirilmiştir.
 
-Gün 8 - Adım 2.3: Akış + Tampon Havuzu + zlib Optimization
-Hedef: %50 bellek azaltma + %100-150 hız artışı
 """
 
 import zlib
@@ -72,7 +70,6 @@ class BufferPool:
         Returns:
             bytearray: Kullanıma hazır tampon
         """
-        # En uygun tampon boyutunu bul (power of 2, >= requested_size)
         optimal_size = self._find_optimal_size(requested_size)
         
         with self._lock:

@@ -3,8 +3,6 @@ ZipReader - ZIP Archive Decompression Module
 ============================================
 Modular ZIP file reader with security validations.
 
-Day 8: Extracted from zip_handler.py as part of Phase 1 modularization.
-
 Features:
 - Secure decompression with ZIP bomb protection
 - Path traversal prevention
@@ -93,6 +91,15 @@ class ZipReader:
         """
         entries = self._get_entries()
         return [entry.filename for entry in entries]
+
+    def inspect(self):
+        """Return a structured safety inspection report for this archive."""
+        try:
+            from .inspection import inspect_archive
+        except ImportError:
+            from Pagonic.core.formats.inspection import inspect_archive
+
+        return inspect_archive(self.path)
 
     def get_file_info(self, filename: str) -> Optional[Dict[str, Any]]:
         """

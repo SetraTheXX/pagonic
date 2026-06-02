@@ -5,8 +5,6 @@ SIMD CRC32 Hızlandırma Modülü
 Bu modül ZIP dosyalarının açılması sırasında CRC32 doğrulama işlemini 
 AVX2/SSE4 SIMD talimatları ile hızlandırır.
 
-Gün 8 - Adım 2.1: SIMD CRC32 Hızlandırma
-Hedef: 3-5x hız artışı, tam test edilebilir yapı
 """
 
 import zlib
@@ -182,7 +180,6 @@ def fast_crc32(data: bytes, initial: int = 0, performance_mode: bool = False) ->
     
     Akıllı strateji:
     - Production: ZIP-uyumlu CRC32 (fastcrc veya zlib fallback)
-    - Benchmark: Ultra-hızlı crc32c (2.34x speedup)
     - Büyük dosyalar: SIMD advantage
     - Küçük dosyalar: zlib fallback (overhead'den kaçınma)
     
@@ -196,7 +193,6 @@ def fast_crc32(data: bytes, initial: int = 0, performance_mode: bool = False) ->
         int: CRC32 checksum değeri
         
     Performance Matrix:
-        - performance_mode=True, initial=0: crc32c (2.34x speedup)
         - performance_mode=False, initial=0, len>1KB: fastcrc (ZIP uyumlu)
         - performance_mode=False, initial=0, len<1KB: zlib (overhead yok)
         - initial!=0: her zaman zlib (compatibility)

@@ -35,10 +35,7 @@ dist/
 *.tmp
 output.mp3
 
-# Old local planning and experiment folders
-Archive/
-YeniPlan/
-md_planlar/
-gun_testleri/
-Doğrulama Ve Test Sonuçları/
-doğrulama_ve_test_sonuçları/
+# Local scratch and experiment folders
+*_plans/
+*_experiments/
+scratch/

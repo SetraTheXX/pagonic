@@ -1,9 +1,11 @@
 # Pagonic
 
-Pagonic is a Python ZIP compression toolkit with three public surfaces:
+Pagonic is an alpha Python ZIP toolkit focused on safe archive inspection,
+secure extraction, and repeatable local benchmarking. Its main idea is simple:
+inspect before you extract.
 
-- A core library for writing, reading, and validating ZIP archives.
-- A `pagonic` command-line interface.
+- A core library for inspecting, writing, reading, and validating ZIP archives.
+- A `pagonic` command-line interface for inspect, verify, safe extract, and ZIP utilities.
 - An optional PyQt6 GUI launched with `pagonic-gui`.
 
 This repository is currently prepared as an alpha-quality public cleanup release. The import package remains `Pagonic` for compatibility; the distribution name is `pagonic`.
@@ -28,9 +30,12 @@ The GUI is optional. If PyQt6 is not installed, `pagonic-gui` exits with a clear
 
 ```bash
 pagonic --help
+pagonic inspect suspicious.zip
+pagonic inspect suspicious.zip --json
+pagonic verify release.zip
+pagonic safe-extract upload.zip output/
 pagonic compress path/to/file.txt -o archive.zip
 pagonic list archive.zip
-pagonic extract archive.zip -o output/
 pagonic config list
 ```
 
@@ -45,7 +50,10 @@ writer.add_file("file.txt")
 writer.finalize()
 
 reader = ZipReader("archive.zip")
-reader.extract_all("output")
+report = reader.inspect()
+
+if report.risk_level in {"ok", "low"}:
+    reader.extract_all("output")
 ```
 
 ## Project Layout
@@ -66,6 +74,16 @@ pyproject.toml    package metadata and tool config
 - [Roadmap](docs/roadmap.md)
 - [Changelog](CHANGELOG.md)
 
+## Risk Signals
+
+Inspection reports are deterministic and do not use runtime AI. Current risk
+flags include path traversal, absolute paths, Windows drive paths, hidden files,
+high compression ratios, unsupported compression methods, suspicious extensions,
+and CRC or structure errors.
+
 ## Status
 
-The current public target is `0.3.0`: a cleaned repository with core ZIP behavior, CLI support, optional GUI packaging, MIT license, and CI-ready tests. The next work is stabilization, API polish, and documentation tightening before a broader release.
+The current public target is `0.3.0`: a cleaned alpha with security-aware ZIP
+inspection, gated safe extraction, core ZIP behavior, CLI support, optional GUI
+packaging, MIT license, and CI-ready tests. The next work is stabilization, API
+polish, and documentation tightening before a broader release.

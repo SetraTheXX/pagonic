@@ -840,7 +840,7 @@ def test_handler_error_handling():
     assert exc_info.value.context.operation == "decompress"
     assert exc_info.value.context.severity == ErrorSeverity.ERROR
 
-def test_handler_partial_failure():
+def test_handler_partial_failure(tmp_path):
     """Test handler behavior during partial failures"""
     registry = FormatRegistry()
     
@@ -860,16 +860,19 @@ def test_handler_partial_failure():
     handler = registry.register(PartialHandler)
     
     # First attempt should fail
+    input_file = str(tmp_path / "file.txt")
+    output_file = str(tmp_path / "output.zip")
+
     with pytest.raises(FormatError) as exc_info:
-        handler.compress(["file.txt"], "output.zip")
+        handler.compress([input_file], output_file)
     assert "Temporary error" in str(exc_info.value)
     
     # Second attempt should succeed
-    handler.compress(["file.txt"], "output.zip")
+    handler.compress([input_file], output_file)
     import os
-    assert os.path.exists("output.zip")
+    assert os.path.exists(output_file)
 
-def test_handler_retries_on_failure():
+def test_handler_retries_on_failure(tmp_path):
     """Test handler retry mechanism on failure"""
     registry = FormatRegistry()
     
@@ -889,15 +892,18 @@ def test_handler_retries_on_failure():
     handler = registry.register(RetryHandler)
     
     # Compression should succeed after one failure
+    input_file = str(tmp_path / "file.txt")
+    output_file = str(tmp_path / "output.zip")
+
     with pytest.raises(FormatError) as exc_info:
-        handler.compress(["file.txt"], "output.zip")
+        handler.compress([input_file], output_file)
     assert "Transient error" in str(exc_info.value)
     
-    handler.compress(["file.txt"], "output.zip")
+    handler.compress([input_file], output_file)
     import os
-    assert os.path.exists("output.zip")
+    assert os.path.exists(output_file)
 
-def test_handler_logging():
+def test_handler_logging(tmp_path):
     """Test handler logging behavior"""
     registry = FormatRegistry()
     
@@ -911,9 +917,12 @@ def test_handler_logging():
     handler = registry.register(LoggingHandler)
     
     # Compression should succeed and log the file list
-    handler.compress(["file.txt"], "output.zip")
+    input_file = str(tmp_path / "file.txt")
+    output_file = str(tmp_path / "output.zip")
+
+    handler.compress([input_file], output_file)
     import os
-    assert os.path.exists("output.zip")
+    assert os.path.exists(output_file)
 
 def test_handler_debugging(monkeypatch):
     """Test handler debugging behavior"""

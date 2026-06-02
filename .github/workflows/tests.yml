@@ -32,3 +32,26 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -q
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check installed packages
+        run: python -m pip check
+
+      - name: CLI smoke test
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path smoke-out -Force | Out-Null
+          Set-Content -Path smoke.txt -Value "hello from ci"
+          pagonic --help
+          pagonic --version
+          pagonic compress smoke.txt -o smoke.zip
+          pagonic inspect smoke.zip --json
+          pagonic inspect smoke.zip --markdown
+          pagonic verify smoke.zip
+          pagonic list smoke.zip --tree
+          pagonic safe-extract smoke.zip smoke-out
+          if (-not (Test-Path "smoke-out/smoke.txt")) {
+            throw "safe-extract did not create smoke-out/smoke.txt"
+          }

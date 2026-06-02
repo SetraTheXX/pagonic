@@ -5,7 +5,6 @@ Optimized Streaming Decompression
 Bu modül buffer pool ve adaptive sizing kullanarak
 optimize edilmiş streaming decompression sağlar.
 
-Gün 8 - Adım 2.3.3: Buffer Pool + Adaptive Sizing Entegrasyonu
 Hedef: Memory efficient + fast decompression
 """
 

@@ -5,7 +5,6 @@ compression_utils.py - ZIP Compression Utility Functions
 Bu modül ZIP sıkıştırma işlemleri için yardımcı fonksiyonları içerir.
 zip_handler.py'den çıkarılarak modüler bir yapıya kavuşturulmuştur.
 
-Created: 2026-01-09 (Phase 1 - Day 5)
 """
 
 import logging
@@ -244,7 +243,6 @@ def estimate_compressed_size(original_size: int, compression_level: int = 6) -> 
 
 
 # =============================================================================
-# Smart Compression Functions (Phase 2 - Day 21)
 # =============================================================================
 
 def calculate_entropy(data: bytes) -> float:
