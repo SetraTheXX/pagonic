@@ -5,7 +5,6 @@ constants.py - ZIP Engine Configuration Constants
 Bu modül ZIP işlemleri için kullanılan tüm sabit değerleri içerir.
 Merkezi bir konumda tutularak kod tekrarını önler ve bakımı kolaylaştırır.
 
-Created: 2026-01-09 (Phase 1 - Day 5)
 """
 
 

@@ -38,13 +38,11 @@ try:
     from ..hybrid_decompressor import HybridFastPathDecompressor
     from ..simd_memory import fast_memcpy
     from ..minimal_zip_writer import MinimalZipWriter
-    # Day 5: Import new modular utilities
     from ..constants import ZipConstants, CompressionStrategy, MemoryThresholds
     from ..compression_utils import (
         calculate_crc32, select_chunk_size, validate_compression_level,
         should_use_zip64, get_compression_stats, format_size
     )
-    # Day 8-9: Import new ZipReader and ZipWriter modules
     from ..zip_reader import ZipReader
     from ..zip_writer import ZipWriter
 except ImportError:
@@ -59,13 +57,11 @@ except ImportError:
         from Pagonic.core.formats.hybrid_decompressor import HybridFastPathDecompressor
         from Pagonic.core.formats.simd_memory import fast_memcpy
         from Pagonic.core.formats.minimal_zip_writer import MinimalZipWriter
-        # Day 5: Import new modular utilities
         from Pagonic.core.formats.constants import ZipConstants, CompressionStrategy, MemoryThresholds
         from Pagonic.core.formats.compression_utils import (
             calculate_crc32, select_chunk_size, validate_compression_level,
             should_use_zip64, get_compression_stats, format_size
         )
-        # Day 8-9: Import new ZipReader and ZipWriter modules
         from Pagonic.core.formats.zip_reader import ZipReader
         from Pagonic.core.formats.zip_writer import ZipWriter
     except ImportError:
@@ -81,13 +77,11 @@ except ImportError:
         from hybrid_decompressor import HybridFastPathDecompressor
         from simd_memory import fast_memcpy
         from minimal_zip_writer import MinimalZipWriter
-        # Day 5: Import new modular utilities
         from constants import ZipConstants, CompressionStrategy, MemoryThresholds
         from compression_utils import (
             calculate_crc32, select_chunk_size, validate_compression_level,
             should_use_zip64, get_compression_stats, format_size
         )
-        # Day 8-9: Import new ZipReader and ZipWriter modules
         from zip_reader import ZipReader
         from zip_writer import ZipWriter
 
@@ -95,7 +89,6 @@ except ImportError:
 
 
 
-# [PerformanceMonitor Removed] - Dead code cleanup Day 3
 
 
 
@@ -177,7 +170,6 @@ class MemoryManager:
 class ZipHandler(FormatHandler):
     """ZIP format handler implementasyonu."""
     
-    # [DAY 1] ZIP handler skeleton - BaseFormatHandler'dan inherit    
     name = "zip"
     extensions = [".zip"]
     can_compress = True
@@ -197,7 +189,6 @@ class ZipHandler(FormatHandler):
         self._chunk_size = self.chunk_size
         
 
-        # [DAY 2 STEP 7] Fallback to embedded system
         self.performance_monitor = None
         self.memory_manager = MemoryManager(max_memory_mb=self.memory_limit // (1024 * 1024))
         
@@ -227,7 +218,6 @@ class ZipHandler(FormatHandler):
         self._ZIP_CENTRAL_DIR_HEADER = 0x02014b50
         self._ZIP_END_OF_CENTRAL_DIR = 0x06054b50
         self._ZIP64_END_OF_CENTRAL_DIR = 0x06064b50
-          # [DAY 3 STEP 1] Advanced chunk processing features
         self._enable_chunk_processing = True
         self._enable_overlap_handling = True  
         self._enable_advanced_streaming = True
@@ -245,7 +235,6 @@ class ZipHandler(FormatHandler):
         self._overlap_size = 1024  # 1KB default overlap
         self._overlap_threshold = 64 * 1024  # Enable overlap for chunks > 64KB
         
-        # [DAY 3 STEP 2] Enhanced memory pool integration features
         self._enable_enhanced_memory_pools = True
         self._enable_pool_size_management = True
         self._enable_memory_pressure_handling = True
@@ -268,7 +257,6 @@ class ZipHandler(FormatHandler):
         self._memory_pressure_threshold = 50 * 1024 * 1024  # 50MB threshold
         self._pool_cleanup_threshold = 100  # Cleanup when 100+ unused buffers
         
-        # [Gn 8.3.4] Hybrid Fast Path Decompressor
         self.hybrid_decompressor = HybridFastPathDecompressor(
             threshold_mb=10,  # 10MB threshold for fast/optimized path selection
             wbits=-15  # Default ZIP deflate window bits
@@ -320,7 +308,6 @@ class ZipHandler(FormatHandler):
     
     def _get_compression_level(self, file_path: str) -> int:
         """
-        Dosya tipine göre uygun sıkıştırma seviyesi hesaplar.
         
         Args:
             file_path: Analiz edilecek dosya yolu
@@ -364,7 +351,6 @@ class ZipHandler(FormatHandler):
     
     def _get_tuned_compression_level(self, file_path: str) -> int:
         """
-        Dosya tipine göre uygun sıkıştırma seviyesi önerir.
         
         Args:
             file_path: Analiz edilecek dosya yolu
@@ -434,7 +420,6 @@ class ZipHandler(FormatHandler):
         """
         Compress files to ZIP using ZipWriter module.
         
-        [DAY 14] Hybrid Integration - delegated to ZipWriter for cleaner code.
         
         Args:
             files: List of file paths to compress
@@ -474,7 +459,6 @@ class ZipHandler(FormatHandler):
         
         return stats
 
-    # [DAY 14] _perform_compression_operation REMOVED - now using ZipWriter delegation
 
     def _get_adaptive_mmap_threshold(self, options=None):
         """Sistem RAM'ine ve opsiyonlara gre mmap threshold belirle."""
@@ -508,11 +492,6 @@ class ZipHandler(FormatHandler):
     def decompress(self, archive: str, target_dir: str, options: Optional[Dict[str, Any]] = None, use_parallel: bool = False) -> Dict[str, Any]:
         """
         ZIP arivini ZIP-aware ekilde aar.
-        [GN 7 - 0.2] ZIP format parser kullanarak bilinli decompression.
-        [GN 9] use_parallel parametresi ile paralel extraction destei
-        [GN 9 - 3.2] Byk dosyalarda memory-mapped extraction
-        [GN 9 - 3.2.3] Donanm tabanl otomatik extraction stratejisi
-        [GN 9 - 3.2.5] Exception handling & graceful shutdown
         """
         # [INPUT VALIDATION FIX] Enhanced input validation
         if not archive or not isinstance(archive, str):
@@ -547,7 +526,6 @@ class ZipHandler(FormatHandler):
                 "error": f"Cannot read archive file: {archive}"
             }
         
-        # [DAY 2 PHASE 1] SECURITY: ZIP bomb protection
         try:
             validate_zip_safety(Path(archive))
         except SecurityError as e:
@@ -616,7 +594,6 @@ class ZipHandler(FormatHandler):
                 mm = None
                 extraction_errors = []
 
-                # Gn 10 - 4.1: YZ Kalp Tanma ile extraction stratejisi seimi
                 file_metadata_list = []
                 for cd_entry in cd_entries:
                     file_metadata_list.append({
@@ -671,7 +648,6 @@ class ZipHandler(FormatHandler):
     def _decompress_entry(self, zip_file: BinaryIO, cd_entry, local_header, target_dir: str, options=None) -> None:
         """
         ZIP iindeki tek bir dosyay karr.
-        [GN 7 - 0.2] Modular, test edilebilir entry extraction.
         
         Args:
             zip_file: Ak ZIP dosyas handle
@@ -692,7 +668,6 @@ class ZipHandler(FormatHandler):
         
         # Check if compression method is supported
         if not CompressionMethods.is_supported(cd_entry.compression_method):
-            # Gn 10 - 4.3: Nadir sktrma yntemi optimizasyonu ve zarif bozulma
             rare_methods = {1: 'shrunk', 6: 'imploded', 12: 'bzip2', 14: 'lzma', 18: 'terse', 19: 'lz77', 97: 'wavpack', 98: 'ppmd'}
             method_id = cd_entry.compression_method
             method_name = rare_methods.get(method_id, f'unknown({method_id})')
@@ -717,7 +692,6 @@ class ZipHandler(FormatHandler):
             decompressed_data = compressed_data
             
         elif cd_entry.compression_method == CompressionMethods.DEFLATE:
-            # [Gn 8.3.4] Hybrid Fast Path Decompression
             try:
                 decompressed_data = self.hybrid_decompressor.decompress_data(
                     compressed_data=compressed_data,
@@ -778,7 +752,6 @@ class ZipHandler(FormatHandler):
         Raises:
             ValidationError: Dosya eriim hatas durumunda
         """
-        # TODO: [DAY 2] ZIP validation implementation
         # Validation hints:
         # - Magic number check (PK signature)        # - Basic structure validation
         # - Header integrity check
@@ -799,7 +772,6 @@ class ZipHandler(FormatHandler):
     def get_metadata(self, archive: str) -> Dict[str, Any]:
         """
         ZIP arivinin meta verilerini dndrr.
-        [DAY 2 STEP 7] Enhanced with performance diagnostics.
 
         Args:
             archive: ZIP dosyasnn yolu
@@ -815,7 +787,6 @@ class ZipHandler(FormatHandler):
             "optimization_settings": self._optimization_settings
         }
         
-        # [DAY 2 STEP 7] Add performance diagnostics
         if self._enable_performance_monitoring or self._enable_memory_management:
             metadata["performance_diagnostics"] = self._get_performance_diagnostics()
         
@@ -831,10 +802,8 @@ class ZipHandler(FormatHandler):
         Returns:
             float: Sktrma oran (0.0 - 1.0 aras)
         """
-        # TODO: [DAY 3] Compression ratio calculation
         return 0.0
 
-    # [DAY 2] zlib Integration Methods
     def _compress_data(self, data: bytes, level: int = 6) -> bytes:
         """
         Veriyi zlib deflate ile sktrr.
@@ -879,7 +848,6 @@ class ZipHandler(FormatHandler):
     def _compress_file_streaming(self, file_path: str, output_path: str, compression_level: Optional[int] = None) -> int:
         """
         Dosyay streaming ekilde sktrr ve compressed dosyay output_path'e kaydeder.
-        [DAY 2 STEP 7] Enhanced with bottleneck detection and memory management.
         
         Args:
             file_path: Sktrlacak dosya yolu
@@ -895,7 +863,6 @@ class ZipHandler(FormatHandler):
         try:
             file_size = os.path.getsize(file_path)
             
-            # [DAY 2 STEP 7] Start performance monitoring
             operation = self._monitor_operation_start("streaming_compression", file_size)
             
             # Memory optimization
@@ -918,7 +885,6 @@ class ZipHandler(FormatHandler):
             bytes_processed = 0
             start_time = time.time()
             
-            # [DAY 2 STEP 7] Allocate work buffer with memory management
             work_buffer = self._allocate_work_buffer(chunk_size, "compression")
             
             try:
@@ -937,7 +903,6 @@ class ZipHandler(FormatHandler):
                         if compressed_chunk:
                             output_file.write(compressed_chunk)
                         
-                        # [DAY 2 STEP 7] Periodic bottleneck detection
                         if bytes_processed % (10 * 1024 * 1024) == 0:  # Every 10MB
                             bottlenecks = self._detect_compression_bottlenecks(file_path, start_time)
                             if bottlenecks:
@@ -954,10 +919,8 @@ class ZipHandler(FormatHandler):
                         output_file.write(final_chunk)
             
             finally:
-                # [DAY 2 STEP 7] Release work buffer
                 self._release_work_buffer(work_buffer, "compression")
             
-            # [DAY 2 STEP 7] End performance monitoring
             bottlenecks = self._monitor_operation_end(operation)
             if bottlenecks:
                 for bottleneck in bottlenecks:
@@ -1079,7 +1042,6 @@ class ZipHandler(FormatHandler):
         else:  # High entropy/random data
             return 0.9  # Poor compression
 
-    # [DAY 2 STEP 4] Directory Structure Handling Methods
     # Manual implementation.
     
     def _normalize_path(self, path: str) -> str:
@@ -1366,7 +1328,6 @@ class ZipHandler(FormatHandler):
         return optimization
 
     # ==========================================
-    # [DAY 3 STEP 1] Chunk Processing Enhancement
     # ==========================================
     
     def _get_enhanced_chunk_size(self, file_size: int) -> int:
@@ -1455,7 +1416,6 @@ class ZipHandler(FormatHandler):
             
         return stats
     
-    # [Day 7 Cleanup - Part 1] Removed dead compression methods:
     # - _compress_with_overlap_handling (lines 1577-1698) - 121 lines
     # - _find_chunk_overlap (lines 1700-1721) - 22 lines
     # - _compress_large_file_optimized (lines 1723-1755) - 33 lines
@@ -1464,7 +1424,6 @@ class ZipHandler(FormatHandler):
     # Kept methods: compress_file_with_threading, _compress_with_mmap
 
 
-# [DAY 3 STEP 2] Enhanced Memory Pool Integration Methods
     
     def _get_enhanced_pooled_buffer(self, size: int, buffer_type: str = "general") -> bytearray:
         """
@@ -1517,7 +1476,6 @@ class ZipHandler(FormatHandler):
             buffer_type: Type of buffer for pool organization
         """
         self._enhanced_pool_stats['total_returns'] += 1
-          # [DAY 3 STEP 8] Manual optimization: Enhanced buffer size limits
         if len(buffer) > 24 * 1024 * 1024:  # Increased from 16MB to 24MB
             return
         
@@ -1527,7 +1485,6 @@ class ZipHandler(FormatHandler):
         if pool_key not in self._buffer_pool:
             self._buffer_pool[pool_key] = []
         
-        # [DAY 3 STEP 8] Increased pool size limit for better reuse
         if len(self._buffer_pool[pool_key]) < 15:  # Increased from 10 to 15
             self._buffer_pool[pool_key].append(buffer)
             
@@ -1671,7 +1628,6 @@ class ZipHandler(FormatHandler):
         
         return cleaned_memory
     
-    # [Day 7 Cleanup - Part 2] Removed dead compression method:
     # - _compress_with_memory_pool_optimization (lines 1793-1909) - 116 lines
     # Kept methods: compress_file_with_threading (default), _compress_with_mmap (large files)
 
@@ -1808,7 +1764,6 @@ class ZipHandler(FormatHandler):
             # Use memory pool optimized compression with parameters
             start_time = time.time()
             
-            # GN 2: Hibrit sistem entegrasyonu - Dosya boyutuna gre strateji seimi
             compression_level = tuned_params['compression_level']
             GB_THRESHOLD = 2 * 1024 * 1024 * 1024  # 2GB snr
             
@@ -1837,7 +1792,6 @@ class ZipHandler(FormatHandler):
                         'output_size': output_size,
                         'compression_ratio': compression_ratio,
                         'compression_time': time.time() - start_time,
-                        'compression_method': compression_method,  # GN 2: Hangi metod kullanld
                         'file_size_category': 'large' if file_size >= GB_THRESHOLD else 'small'
                     }
                 else:
@@ -1967,7 +1921,6 @@ class ZipHandler(FormatHandler):
         """
         # Get system memory info
         memory_info = psutil.virtual_memory()
-        available_memory = memory_info.available        # [DAY 3 STEP 8] Manual optimization: Enhanced chunk sizes
         if file_size < 10 * 1024 * 1024:  # < 10MB
             chunk_size = 1024 * 1024  # 1MB for small files (increased from 512KB)
             buffer_count = 6  # More buffers for better parallelism
@@ -1975,12 +1928,10 @@ class ZipHandler(FormatHandler):
             chunk_size = 6 * 1024 * 1024  # 6MB for medium files (increased from 4MB)
             buffer_count = 8  # More buffers
         else:  # >= 100MB
-            # [DAY 3 STEP 8] Larger chunks for maximum throughput
             max_chunk_size = min(32 * 1024 * 1024, available_memory // 8)  # Max 32MB (increased from 16MB)
             chunk_size = max(16 * 1024 * 1024, max_chunk_size)  # Min 16MB (increased from 8MB)
             buffer_count = 12  # More buffers for better parallelism
         
-        # [DAY 3 STEP 8] Enhanced prefetch optimization
         prefetch_size = min(chunk_size // 2, 8 * 1024 * 1024)  # Prefetch up to 50% or max 8MB
         
         return {
@@ -2007,7 +1958,6 @@ class ZipHandler(FormatHandler):
         
         # Get memory access optimization
         memory_config = self._apply_memory_access_optimization(file_size)
-          # Performance-based tuning for Day 3 Step 3 targets (>150MB/s)
         if file_size > 50 * 1024 * 1024:  # Large files - prioritize maximum speed
             tuning_profile = 'speed_optimized'
             compression_level = min(strategy_config['level'], 3)  # Fast compression for speed
@@ -2018,7 +1968,6 @@ class ZipHandler(FormatHandler):
             memory_level = 8  # Moderate memory usage
         else:
             tuning_profile = 'balanced'
-            compression_level = 4  # Fast default for Day 3 performance targets
             memory_level = 7
         
         # Calculate efficiency score for this configuration
@@ -2211,7 +2160,6 @@ class ZipHandler(FormatHandler):
         return stats
 
     # ==========================================
-    # [DAY 3 STEP 4] Threading Patterns Support
     # ==========================================
     
     def compress_file_with_threading(self, input_file_path: str, output_file_path: str, 
@@ -2219,7 +2167,6 @@ class ZipHandler(FormatHandler):
         """
         Compress a file using threading patterns for improved performance.
         
-        This method implements multi-threading to achieve >150MB/s sustained throughput.
         It divides the file into chunks and processes them in parallel threads while
         maintaining thread safety and proper resource management.
         
@@ -2233,7 +2180,6 @@ class ZipHandler(FormatHandler):
             Dict[str, Any]: Threading compression results with performance metrics
         """
         try:
-            # [DAY 3 STEP 4] Input validation
             if not os.path.exists(input_file_path):
                 return {
                     'success': False,
@@ -2249,12 +2195,10 @@ class ZipHandler(FormatHandler):
                     'threading_enabled': False
                 }
             
-            # [DAY 3 STEP 4] Threading configuration
             start_time = time.time()
             start_memory = psutil.Process().memory_info().rss
               # Auto-calculate optimal chunk size for threading
             if chunk_size is None:
-                # [DAY 3 STEP 8] Manual optimization: Enhanced chunk sizing
                 if file_size < 10 * 1024 * 1024:  # < 10MB
                     chunk_size = max(2 * 1024 * 1024, file_size // 2)  # Large chunks for small files
                 elif file_size < 100 * 1024 * 1024:  # < 100MB
@@ -2264,17 +2208,13 @@ class ZipHandler(FormatHandler):
                 
                 chunk_size = min(chunk_size, 32 * 1024 * 1024)  # Max 32MB (increased from 16MB)
             
-            # [DAY 3 STEP 4] Thread pool setup
             thread_results = []
             threads = []
             thread_lock = threading.Lock()
-              # [DAY 3 STEP 4] Process file with real threading for >150MB/s performance
             results = []
             threads = []
             
             # For initial implementation: optimize for speed with minimal compression
-            # This achieves >150MB/s target by reducing compression overhead
-            compression_time_start = time.time()            # [DAY 3 STEP 8] Manual optimization: Adaptive compression level based on file size
             if file_size < 1024 * 1024:  # < 1MB
                 compression_level = 1  # Fastest for small files
             elif file_size < 10 * 1024 * 1024:  # < 10MB
@@ -2282,20 +2222,17 @@ class ZipHandler(FormatHandler):
             else:  # >= 10MB
                 compression_level = 1  # Fast for large files to maintain throughput
             
-            # GN 2: Hibrit sistem entegrasyonu - Threading + MinimalZipWriter
             GB_THRESHOLD = 2 * 1024 * 1024 * 1024  # 2GB snr
             
             try:
                 # Dosya boyutuna gre hibrit strateji seimi
                 if file_size >= GB_THRESHOLD:
                     # 2GB+: MinimalZipWriter kullanm (kendi sistem)
-                    logger.info("[GN 2] Threading + MinimalZipWriter: Large file (%sGB)", file_size / (1024**3))
                     writer = MinimalZipWriter(compression_level=compression_level)
                     writer.create_zip_file(input_file_path, output_file_path)
                     compression_method = "threading_minimal_writer"
                 else:
                     # 2GB alt: Mevcut zipfile kullanm (gvenli)
-                    logger.info("[GN 2] Threading + zipfile: Small file (%sMB)", file_size / (1024**2))
                     with zipfile.ZipFile(output_file_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=compression_level) as zipf:
                         arcname = os.path.basename(input_file_path)
                         zipf.write(input_file_path, arcname)
@@ -2316,7 +2253,7 @@ class ZipHandler(FormatHandler):
                     'error': f'ZIP creation failed: {e}',
                     'threading_enabled': True,
                     'compression_method': 'threading_failed'
-                }            # [DAY 3 STEP 4] Calculate performance metrics
+                }
             duration = max(time.time() - start_time, 0.001)  # Minimum 1ms to avoid division by zero
             end_memory = psutil.Process().memory_info().rss
             
@@ -2334,17 +2271,13 @@ class ZipHandler(FormatHandler):
                 'chunk_size': chunk_size,
                 'chunk_count': chunk_count,
                 'threading_enabled': True,
-                'threading_used': True,  # [DAY 3 STEP 4] Field required by test
                 'memory_usage_mb': (end_memory - start_memory) / (1024 * 1024),
                 'memory_usage': (end_memory - start_memory) / (1024 * 1024),  # Required by test
                 'cpu_usage': 50.0,  # Simulated CPU usage for now
-                'file_size_mb': file_size / (1024 * 1024),  # [DAY 3 STEP 4] Required by Test 6
                 'method_used': 'threading_simulation',
-                'compression_method': compression_method,  # GN 2: Hangi metod kullanld
                 'file_size_category': 'large' if file_size >= GB_THRESHOLD else 'small'
             }
             
-            # [DAY 3 STEP 4] Performance logging
             logger.debug("Threading Compression: %.1f MB/s with %d threads", throughput_mbps, thread_count)
             
             return result
@@ -2374,7 +2307,6 @@ class ZipHandler(FormatHandler):
             Dict[str, Any]: Thread-safe compression results
         """
         try:
-            # [DAY 3 STEP 4] Thread-safe compression setup
             thread_id = threading.current_thread().ident
             start_time = time.time()
             
@@ -2400,7 +2332,6 @@ class ZipHandler(FormatHandler):
                 strategy=zlib.Z_DEFAULT_STRATEGY
             )
             
-            # [DAY 3 STEP 4] Perform thread-safe compression
             compressed_data = compressor.compress(file_data)
             compressed_data += compressor.flush()
             
@@ -2409,7 +2340,6 @@ class ZipHandler(FormatHandler):
             with open(output_file_path, 'wb') as output_file:
                 output_file.write(compressed_data)
             
-            # [DAY 3 STEP 4] Calculate metrics
             original_size = len(file_data)
             compressed_size = len(compressed_data)
             duration = time.time() - start_time
@@ -2440,7 +2370,6 @@ class ZipHandler(FormatHandler):
                 'error_type': type(e).__name__            }
 
     # ==========================================
-    # [DAY 3 STEP 5] Memory-Mapped File Processing (mmap vs bytearray)
     # ==========================================
     
     def _compress_with_mmap(self, input_file_path: str, output_file_path: str,
@@ -2641,7 +2570,6 @@ class ZipHandler(FormatHandler):
         """
         Determine optimal memory strategy (mmap vs bytearray) based on file characteristics.
         
-        This is the core algorithm for automatic strategy selection in Phase 4.
         
         Args:
             file_size: Size of file to process in bytes
@@ -2673,7 +2601,6 @@ class ZipHandler(FormatHandler):
             # Default to bytearray for balanced scenarios
             return 'bytearray'
     
-    # [Day 6 Cleanup] Removed dead memory strategy functions:
     # - compress_file_adaptive_memory (lines 3136-3192)
     # - _compress_with_memoryview (lines 3198-3274)
     # - _select_optimal_memory_strategy_enhanced (lines 3276-3315)
@@ -2685,7 +2612,6 @@ class ZipHandler(FormatHandler):
     def _decompress_entry_with_mmap(self, mm, cd_entry, local_header, target_dir: str, options=None) -> None:
         """
         ZIP iindeki tek bir dosyay memory-mapped extraction ile karr.
-        [GN 9 - 3.2] Byk dosya extraction iin optimize.
         """
         try:
             from ..zip_structs import CompressionMethods

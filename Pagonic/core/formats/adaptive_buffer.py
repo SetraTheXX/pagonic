@@ -5,7 +5,6 @@ Adaptive Buffer Sizing Algorithm
 Bu modül dosya boyutu, sıkıştırma oranı ve sistem kaynaklarına göre
 optimal tampon boyutunu dinamik olarak belirler.
 
-Gün 8 - Adım 2.3.2: Uyarlanabilir Tampon Boyutlandırma
 Hedef: Dosya boyutuna göre optimal tampon seçimi
 """
 

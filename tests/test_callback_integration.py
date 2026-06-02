@@ -3,7 +3,6 @@ Test Callback Integration
 =========================
 Tests for progress callback functionality in ZipWriter and ZipReader.
 
-Day 0 (Phase 3 Preparation): Ensuring callbacks work for GUI/CLI integration.
 """
 
 import os

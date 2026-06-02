@@ -1,5 +1,6 @@
 """Pagonic command-line interface."""
 
+import json
 import os
 import time
 from pathlib import Path
@@ -7,9 +8,10 @@ from typing import Tuple
 
 import click
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
 from rich.panel import Panel
+from rich.tree import Tree
 from rich import box
 
 from Pagonic import __version__
@@ -23,16 +25,19 @@ VERSION = __version__
 @click.version_option(version=VERSION, prog_name="Pagonic")
 def cli():
     """
-     Pagonic - ZIP Compression Tool
+     Pagonic - Safe ZIP Inspection Toolkit
     
-    A professional ZIP compression tool with security features,
-    archive utilities, and a terminal interface.
+    A security-aware ZIP toolkit for inspection, verification,
+    reporting, and safe extraction.
     
     \b
     Examples:
         pagonic compress file1.txt file2.txt archive.zip
         pagonic extract archive.zip ./output/
         pagonic list archive.zip
+        pagonic inspect archive.zip --json
+        pagonic verify archive.zip
+        pagonic safe-extract archive.zip ./output/
         pagonic benchmark -s 10
         pagonic config list
     """
@@ -101,7 +106,6 @@ def compress(files: Tuple[str, ...], output: str, level: int, verbose: bool):
         
         # Progress bar
         with Progress(
-            SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(bar_width=40),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
@@ -205,7 +209,6 @@ def extract(archive: str, output: str, verbose: bool):
         
         # Extract with progress bar
         with Progress(
-            SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(bar_width=40),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
@@ -268,10 +271,199 @@ def extract(archive: str, output: str, verbose: bool):
         raise SystemExit(1)
 
 
+@cli.command()
+@click.argument('archive', type=click.Path(exists=True))
+@click.option('--json', 'json_output', is_flag=True, help='Output a JSON inspection report')
+@click.option('--markdown', 'markdown_output', is_flag=True, help='Output a Markdown inspection report')
+def inspect(archive: str, json_output: bool, markdown_output: bool):
+    """
+     Inspect a ZIP archive before extraction.
+
+    \b
+    Examples:
+        pagonic inspect archive.zip
+        pagonic inspect archive.zip --json
+        pagonic inspect archive.zip --markdown
+    """
+    from Pagonic.core.formats.inspection import inspect_archive
+
+    if json_output and markdown_output:
+        console.print("[red] Error:[/] Use only one output format: --json or --markdown")
+        raise SystemExit(1)
+
+    report = inspect_archive(archive)
+
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+        return
+
+    if markdown_output:
+        click.echo(_inspection_report_markdown(report))
+        return
+
+    risk_styles = {"ok": "bold green", "low": "green", "medium": "yellow", "high": "bold red", "critical": "bold red"}
+    risk_style = risk_styles.get(report.risk_level, "white")
+
+    console.print()
+    console.print(Panel.fit(
+        f"[bold cyan]ZIP Inspection[/]\n\n"
+        f"[dim]Archive:[/] {archive}\n"
+        f"[dim]Risk:[/] [{risk_style}]{report.risk_level.upper()}[/]\n"
+        f"[dim]Files:[/] {report.file_count}",
+        title=f" {Path(archive).name}",
+        border_style="cyan",
+    ))
+
+    table = Table(title=" Inspection Summary", box=box.ROUNDED)
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    table.add_row("Total Files", str(report.file_count))
+    table.add_row("Uncompressed Size", format_size(report.total_uncompressed_size))
+    table.add_row("Compressed Size", format_size(report.total_compressed_size))
+    table.add_row("Compression Ratio", f"{report.compression_ratio:.2f}:1")
+    table.add_row("Risk Level", f"[{risk_style}]{report.risk_level}[/]")
+    console.print(table)
+
+    risky_entries = [entry for entry in report.entries if entry.risk_flags]
+    if risky_entries:
+        console.print()
+        risk_table = Table(title=" Risky Entries", box=box.ROUNDED)
+        risk_table.add_column("File", style="white", no_wrap=False)
+        risk_table.add_column("Safe Path", style="cyan", no_wrap=False)
+        risk_table.add_column("Risk Flags", style="yellow", no_wrap=False)
+        for entry in risky_entries:
+            risk_table.add_row(entry.filename, entry.safe_path or "(empty)", ", ".join(entry.risk_flags))
+        console.print(risk_table)
+
+    if report.warnings:
+        console.print()
+        console.print("[yellow]Warnings:[/]")
+        for warning in report.warnings:
+            console.print(f"  - {warning}")
+
+    if report.errors:
+        console.print()
+        console.print("[red]Errors:[/]")
+        for error in report.errors:
+            console.print(f"  - {error}")
+
+    console.print()
+
+
+def _inspection_report_markdown(report) -> str:
+    """Render an inspection report as Markdown."""
+    lines = [
+        "# ZIP Inspection Report",
+        "",
+        f"- Archive: `{report.archive_path}`",
+        f"- Risk level: `{report.risk_level}`",
+        f"- Files: `{report.file_count}`",
+        f"- Uncompressed size: `{format_size(report.total_uncompressed_size)}`",
+        f"- Compressed size: `{format_size(report.total_compressed_size)}`",
+        f"- Compression ratio: `{report.compression_ratio:.2f}:1`",
+        "",
+    ]
+    if report.warnings:
+        lines.extend(["## Warnings", ""])
+        lines.extend(f"- {warning}" for warning in report.warnings)
+        lines.append("")
+    if report.errors:
+        lines.extend(["## Errors", ""])
+        lines.extend(f"- {error}" for error in report.errors)
+        lines.append("")
+    lines.extend(["## Entries", "", "| File | Safe path | Size | Compressed | Risk flags |", "| --- | --- | ---: | ---: | --- |"])
+    for entry in report.entries:
+        flags = ", ".join(entry.risk_flags) if entry.risk_flags else "-"
+        lines.append(
+            f"| {_markdown_cell(entry.filename)} | {_markdown_cell(entry.safe_path)} | "
+            f"{format_size(entry.uncompressed_size)} | {format_size(entry.compressed_size)} | {_markdown_cell(flags)} |"
+        )
+    return "\n".join(lines)
+
+
+def _markdown_cell(value: str) -> str:
+    """Escape a value for a Markdown table cell."""
+    return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+@cli.command()
+@click.argument('archive', type=click.Path(exists=True))
+def verify(archive: str):
+    """
+     Verify whether a ZIP archive is safe enough for automation.
+    """
+    from Pagonic.core.formats.inspection import inspect_archive
+
+    report = inspect_archive(archive)
+    acceptable = report.risk_level in {"ok", "low"} and not report.errors
+    if acceptable:
+        console.print(f"[bold green]OK[/] {archive} passed verification with risk level [green]{report.risk_level}[/].")
+        raise SystemExit(0)
+
+    console.print(f"[bold red]FAILED[/] {archive} has risk level [red]{report.risk_level}[/].")
+    risky_entries = [entry for entry in report.entries if entry.risk_flags]
+    if risky_entries:
+        table = Table(title=" Risky Entries", box=box.ROUNDED)
+        table.add_column("File", style="white", no_wrap=False)
+        table.add_column("Risk Flags", style="yellow", no_wrap=False)
+        for entry in risky_entries:
+            table.add_row(entry.filename, ", ".join(entry.risk_flags))
+        console.print(table)
+    for warning in report.warnings:
+        console.print(f"[yellow]Warning:[/] {warning}")
+    for error in report.errors:
+        console.print(f"[red]Error:[/] {error}")
+    raise SystemExit(1)
+
+
+@cli.command('safe-extract')
+@click.argument('archive', type=click.Path(exists=True))
+@click.argument('output', type=click.Path())
+@click.option(
+    '--allow-risk',
+    type=click.Choice(['ok', 'low', 'medium', 'high', 'critical']),
+    default='medium',
+    show_default=True,
+    help='Maximum inspection risk level allowed before extraction',
+)
+def safe_extract(archive: str, output: str, allow_risk: str):
+    """
+     Inspect a ZIP archive, then extract only if risk is acceptable.
+    """
+    from Pagonic.core.formats.inspection import inspect_archive
+    from Pagonic.core.formats.zip_reader import ZipReader
+
+    risk_order = {'ok': 0, 'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
+    report = inspect_archive(archive)
+    allowed = risk_order[report.risk_level] <= risk_order[allow_risk] and not report.errors
+
+    if not allowed:
+        console.print(
+            f"[bold red]Refused[/] {archive} has risk level [red]{report.risk_level}[/] "
+            f"above allowed [yellow]{allow_risk}[/]."
+        )
+        raise SystemExit(1)
+
+    output_path = Path(output)
+    output_path.mkdir(parents=True, exist_ok=True)
+    result = ZipReader(archive).extract_all(str(output_path))
+    failed = result.get('failed', [])
+
+    console.print(
+        f"[bold green]Extracted[/] {len(result.get('success', []))} files to "
+        f"[cyan]{output_path}[/] after inspection risk [green]{report.risk_level}[/]."
+    )
+    if failed:
+        console.print(f"[yellow]Some files failed:[/] {len(failed)}")
+        raise SystemExit(1)
+    raise SystemExit(0)
+
+
 @cli.command('list')
 @click.argument('archive', type=click.Path(exists=True))
 @click.option('--long', '-l', is_flag=True, help='Show detailed information')
-def list_contents(archive: str, long: bool):
+@click.option('--tree', 'tree_output', is_flag=True, help='Show entries as a directory tree')
+def list_contents(archive: str, long: bool, tree_output: bool):
     """
      List contents of a ZIP archive.
     
@@ -279,6 +471,7 @@ def list_contents(archive: str, long: bool):
     Examples:
         pagonic list archive.zip
         pagonic list archive.zip -l
+        pagonic list archive.zip --tree
     """
     from Pagonic.core.formats.zip_reader import ZipReader
     
@@ -288,6 +481,24 @@ def list_contents(archive: str, long: bool):
         # Create reader
         reader = ZipReader(archive)
         entries = reader._get_entries()  # Use internal method
+
+        if tree_output:
+            tree = Tree(f"[bold cyan]{Path(archive).name}[/]")
+            tree_nodes = {"": tree}
+            for entry in sorted(entries, key=lambda item: item.filename):
+                parts = [part for part in entry.filename.replace("\\", "/").split("/") if part]
+                current_path = ""
+                for index, part in enumerate(parts):
+                    next_path = f"{current_path}/{part}" if current_path else part
+                    is_leaf = index == len(parts) - 1
+                    if is_leaf:
+                        tree_nodes[current_path].add(part)
+                    elif next_path not in tree_nodes:
+                        tree_nodes[next_path] = tree_nodes[current_path].add(f"[cyan]{part}[/]")
+                    current_path = next_path
+            console.print(tree)
+            console.print()
+            return
         
         # Calculate totals
         total_uncompressed = sum(e.uncompressed_size for e in entries)

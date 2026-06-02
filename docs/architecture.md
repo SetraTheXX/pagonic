@@ -1,11 +1,14 @@
 # Architecture
 
-Pagonic is organized around a ZIP core with small public entry points for CLI and GUI usage.
+Pagonic is organized around a security-aware ZIP core with small public entry
+points for CLI and GUI usage. The preferred flow for untrusted archives is
+inspection first, extraction second.
 
 ## Package Map
 
 - `Pagonic.core.formats.zip_writer.ZipWriter` writes archives and normalizes compression levels.
 - `Pagonic.core.formats.zip_reader.ZipReader` reads archive entries and extracts files.
+- `Pagonic.core.formats.inspection.inspect_archive` produces structured risk reports without extraction.
 - `Pagonic.core.formats.handlers.zip_handler.ZipHandler` is the compatibility facade used by older tests and workflows.
 - `Pagonic.core.formats.security` validates archive safety and sanitizes archive paths.
 - `Pagonic.cli` exposes the `pagonic` command.
@@ -22,14 +25,27 @@ Small and regular archives use Python's `zipfile` backend. Large-file paths can 
 
 ## Extraction Flow
 
-1. The caller creates a `ZipReader`.
-2. Archive metadata is parsed and validated.
-3. Extraction paths are sanitized before writing to disk.
+1. The caller inspects the archive with `inspect_archive()` or `ZipReader.inspect()`.
+2. The caller decides whether the reported risk level is acceptable.
+3. `ZipReader.extract_all()` writes entries through secure extraction paths.
 4. Optional callbacks report item progress.
+
+The CLI `safe-extract` command applies this gate automatically and refuses
+`high` or `critical` risk archives by default.
+
+## Inspection Flow
+
+1. `inspect_archive()` reads ZIP metadata without extracting files.
+2. Each entry receives a normalized safe path, size data, CRC metadata, and risk flags.
+3. Archive-level totals and the highest risk level are summarized.
+4. Reports can be rendered in the terminal or emitted as JSON or Markdown.
 
 ## Security Model
 
-The public ZIP paths are treated as untrusted input. Extraction and archive naming code must prevent traversal outside the selected target directory, reject unsafe filenames, and keep ZIP bomb checks explicit.
+The public ZIP paths are treated as untrusted input. Extraction and archive
+naming code must prevent traversal outside the selected target directory,
+analyze absolute paths and Windows drive paths consistently across platforms,
+reject unsafe filenames where required, and keep ZIP bomb checks explicit.
 
 ## Compatibility
 

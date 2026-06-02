@@ -3,7 +3,6 @@ Error Handling Tests
 =====================
 Test error scenarios and edge cases.
 
-Day 24: Phase 2 Comprehensive Testing.
 """
 
 import os

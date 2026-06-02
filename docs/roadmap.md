@@ -5,17 +5,19 @@ This roadmap replaces the older local phase plans. The old plans were useful for
 ## 0.3.x Stabilization
 
 - Keep the public tree clean and CI-backed.
-- Tighten CLI behavior and error messages.
+- Keep `inspect`, `verify`, and `safe-extract` as the main CLI value path.
+- Tighten CLI behavior and error messages around invalid and risky archives.
 - Add focused GUI smoke coverage without requiring PyQt6 for CLI-only users.
 - Refresh architecture and user docs as APIs settle.
 - Keep the test suite green on Windows and Linux.
 
 ## 0.4.x API Polish
 
-- Review `ZipWriter`, `ZipReader`, and `ZipHandler` for a smaller stable public surface.
+- Review `ZipWriter`, `ZipReader`, `inspect_archive`, and `ZipHandler` for a smaller stable public surface.
 - Remove or quarantine internal experimental helpers that are not part of the API.
 - Improve typed return values for archive metadata and operation results.
 - Clarify config file behavior and CLI defaults.
+- Document risk flag meanings and report formats.
 
 ## 0.5.x Packaging and Release Prep
 
@@ -28,3 +30,4 @@ This roadmap replaces the older local phase plans. The old plans were useful for
 - Consider a lowercase `pagonic` import package with a compatibility plan.
 - Revisit benchmarks with repeatable fixtures.
 - Treat any Rust or native-performance direction as a separate project plan, not part of this Python public cleanup.
+- Consider a minimal GUI only after the CLI inspection workflow is stable.

@@ -3,7 +3,6 @@ Security Tests - Path Traversal Prevention
 ==========================================
 Tests for sanitize_path() function to prevent path traversal attacks.
 
-Phase 1 Day 2 - Security Fixes
 """
 
 import pytest

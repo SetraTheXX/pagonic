@@ -3,7 +3,6 @@ Smart Compression Tests
 ========================
 Tests for entropy calculation and smart compression level selection.
 
-Day 21: Phase 2 Smart Compression implementation.
 """
 
 import os

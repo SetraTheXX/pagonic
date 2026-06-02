@@ -6,8 +6,6 @@ Provides protection against:
 - Path traversal attacks (directory traversal)
 - Malicious file names
 - Size limit violations
-
-Phase 1 Day 2 - Security Fixes
 """
 
 from pathlib import Path
@@ -110,8 +108,8 @@ def sanitize_path(file_path: str) -> str:
     Raises:
         ValidationError: If filename is invalid or dangerous
     """
-    # Get basename only (removes directory traversal)
-    filename = Path(file_path).name
+    normalized_path = str(file_path).replace('\\', '/')
+    filename = normalized_path.rsplit('/', 1)[-1]
 
     # Remove dangerous path separators and traversal patterns
     filename = filename.replace('..', '').replace('/', '').replace('\\', '')
@@ -158,16 +156,16 @@ def secure_extract_path(zip_filename: str, target_dir: str) -> str:
     Raises:
         SecurityError: If path would escape target directory
     """
-    # Normalize the filename - remove leading slashes and backslashes
-    clean_name = zip_filename.lstrip('/\\')
+    clean_name = str(zip_filename).replace('\\', '/')
+    clean_name = clean_name.lstrip('/')
     
     # Replace Windows absolute paths (C:\) 
     if len(clean_name) >= 2 and clean_name[1] == ':':
-        clean_name = clean_name[2:].lstrip('/\\')
+        clean_name = clean_name[2:].lstrip('/')
     
     # Remove any .. components by rebuilding path
     parts = []
-    for part in clean_name.replace('\\', '/').split('/'):
+    for part in clean_name.split('/'):
         if part in ('', '.'):
             continue
         elif part == '..':
