@@ -19,6 +19,7 @@ from Pagonic.cli.utils import format_size, format_time, format_ratio
 
 console = Console()
 VERSION = __version__
+RISK_LEVEL_ORDER = {'ok': 0, 'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
 
 
 @click.group()
@@ -320,8 +321,10 @@ def inspect(archive: str, json_output: bool, markdown_output: bool):
     table.add_row("Total Files", str(report.file_count))
     table.add_row("Uncompressed Size", format_size(report.total_uncompressed_size))
     table.add_row("Compressed Size", format_size(report.total_compressed_size))
-    table.add_row("Compression Ratio", f"{report.compression_ratio:.2f}:1")
+    table.add_row("Compression Ratio", f"{report.global_compression_ratio:.2f}:1")
     table.add_row("Risk Level", f"[{risk_style}]{report.risk_level}[/]")
+    table.add_row("Risk Flags", ", ".join(report.risk_flags) if report.risk_flags else "-")
+    table.add_row("Recommended Action", report.recommended_action)
     console.print(table)
 
     risky_entries = [entry for entry in report.entries if entry.risk_flags]
@@ -352,17 +355,65 @@ def inspect(archive: str, json_output: bool, markdown_output: bool):
 
 def _inspection_report_markdown(report) -> str:
     """Render an inspection report as Markdown."""
+    from Pagonic.core.formats.inspection import RISK_CATALOG
+
+    risk_flags = list(report.risk_flags)
     lines = [
         "# ZIP Inspection Report",
         "",
-        f"- Archive: `{report.archive_path}`",
-        f"- Risk level: `{report.risk_level}`",
-        f"- Files: `{report.file_count}`",
-        f"- Uncompressed size: `{format_size(report.total_uncompressed_size)}`",
-        f"- Compressed size: `{format_size(report.total_compressed_size)}`",
-        f"- Compression ratio: `{report.compression_ratio:.2f}:1`",
+        "## Archive Summary",
+        "",
+        "| Field | Value |",
+        "| --- | --- |",
+        f"| Archive | `{_markdown_cell(report.archive_path)}` |",
+        f"| Overall risk level | `{report.risk_level}` |",
+        f"| Recommended action | {_markdown_cell(report.recommended_action)} |",
+        f"| Files | {report.file_count} |",
+        f"| Uncompressed size | {format_size(report.total_uncompressed_size)} |",
+        f"| Compressed size | {format_size(report.total_compressed_size)} |",
+        f"| Global compression ratio | `{report.global_compression_ratio:.2f}:1` |",
         "",
     ]
+
+    lines.extend(["## Risk Flags", ""])
+    if risk_flags:
+        lines.extend(
+            [
+                "| ID | Severity | Title | Explanation | Recommended action |",
+                "| --- | --- | --- | --- | --- |",
+            ]
+        )
+        for risk_id in risk_flags:
+            definition = RISK_CATALOG.get(risk_id)
+            if definition is None:
+                lines.append(f"| `{_markdown_cell(risk_id)}` | `low` | Unknown risk | - | Review manually. |")
+                continue
+            lines.append(
+                f"| `{_markdown_cell(definition.id)}` | `{definition.severity}` | "
+                f"{_markdown_cell(definition.title)} | {_markdown_cell(definition.explanation)} | "
+                f"{_markdown_cell(definition.recommended_action)} |"
+            )
+    else:
+        lines.append("No risk flags were detected.")
+    lines.append("")
+
+    lines.extend(
+        [
+            "## Entries",
+            "",
+            "| Original name | Safe name | Method | CRC32 | Uncompressed | Compressed | Ratio | Risk flags |",
+            "| --- | --- | ---: | --- | ---: | ---: | ---: | --- |",
+        ]
+    )
+    for entry in report.entries:
+        flags = ", ".join(entry.risk_flags) if entry.risk_flags else "-"
+        lines.append(
+            f"| {_markdown_cell(entry.original_name)} | {_markdown_cell(entry.safe_name)} | "
+            f"{entry.compression_method} | `{entry.crc32:08x}` | {format_size(entry.uncompressed_size)} | "
+            f"{format_size(entry.compressed_size)} | {entry.compression_ratio:.2f}:1 | {_markdown_cell(flags)} |"
+        )
+    lines.append("")
+
     if report.warnings:
         lines.extend(["## Warnings", ""])
         lines.extend(f"- {warning}" for warning in report.warnings)
@@ -371,13 +422,6 @@ def _inspection_report_markdown(report) -> str:
         lines.extend(["## Errors", ""])
         lines.extend(f"- {error}" for error in report.errors)
         lines.append("")
-    lines.extend(["## Entries", "", "| File | Safe path | Size | Compressed | Risk flags |", "| --- | --- | ---: | ---: | --- |"])
-    for entry in report.entries:
-        flags = ", ".join(entry.risk_flags) if entry.risk_flags else "-"
-        lines.append(
-            f"| {_markdown_cell(entry.filename)} | {_markdown_cell(entry.safe_path)} | "
-            f"{format_size(entry.uncompressed_size)} | {format_size(entry.compressed_size)} | {_markdown_cell(flags)} |"
-        )
     return "\n".join(lines)
 
 
@@ -388,19 +432,33 @@ def _markdown_cell(value: str) -> str:
 
 @cli.command()
 @click.argument('archive', type=click.Path(exists=True))
-def verify(archive: str):
+@click.option(
+    '--max-risk',
+    type=click.Choice(['ok', 'low', 'medium', 'high', 'critical']),
+    default='low',
+    show_default=True,
+    help='Maximum inspection risk level accepted as a passing verification',
+)
+def verify(archive: str, max_risk: str):
     """
      Verify whether a ZIP archive is safe enough for automation.
     """
     from Pagonic.core.formats.inspection import inspect_archive
 
     report = inspect_archive(archive)
-    acceptable = report.risk_level in {"ok", "low"} and not report.errors
+    acceptable = RISK_LEVEL_ORDER[report.risk_level] <= RISK_LEVEL_ORDER[max_risk] and not report.errors
     if acceptable:
-        console.print(f"[bold green]OK[/] {archive} passed verification with risk level [green]{report.risk_level}[/].")
+        console.print(
+            f"[bold green]OK[/] {archive} passed verification with risk level "
+            f"[green]{report.risk_level}[/] under max risk [green]{max_risk}[/]."
+        )
         raise SystemExit(0)
 
-    console.print(f"[bold red]FAILED[/] {archive} has risk level [red]{report.risk_level}[/].")
+    console.print(
+        f"[bold red]FAILED[/] {archive} has risk level [red]{report.risk_level}[/] "
+        f"above max risk [yellow]{max_risk}[/]."
+    )
+    console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
     risky_entries = [entry for entry in report.entries if entry.risk_flags]
     if risky_entries:
         table = Table(title=" Risky Entries", box=box.ROUNDED)
@@ -426,23 +484,31 @@ def verify(archive: str):
     show_default=True,
     help='Maximum inspection risk level allowed before extraction',
 )
-def safe_extract(archive: str, output: str, allow_risk: str):
+@click.option('--dry-run', is_flag=True, help='Inspect and report the extraction decision without writing files')
+def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
     """
      Inspect a ZIP archive, then extract only if risk is acceptable.
     """
     from Pagonic.core.formats.inspection import inspect_archive
     from Pagonic.core.formats.zip_reader import ZipReader
 
-    risk_order = {'ok': 0, 'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
     report = inspect_archive(archive)
-    allowed = risk_order[report.risk_level] <= risk_order[allow_risk] and not report.errors
+    allowed = RISK_LEVEL_ORDER[report.risk_level] <= RISK_LEVEL_ORDER[allow_risk] and not report.errors
 
     if not allowed:
         console.print(
             f"[bold red]Refused[/] {archive} has risk level [red]{report.risk_level}[/] "
             f"above allowed [yellow]{allow_risk}[/]."
         )
+        console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
         raise SystemExit(1)
+
+    if dry_run:
+        console.print(
+            f"[bold green]Dry run OK[/] {archive} would be extracted to [cyan]{output}[/] "
+            f"with inspection risk [green]{report.risk_level}[/]."
+        )
+        raise SystemExit(0)
 
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)

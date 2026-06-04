@@ -283,8 +283,37 @@ class TestInspectCommand:
 
             assert result.exit_code == 0
             payload = json.loads(result.output)
+            expected_report_keys = {
+                'archive_path',
+                'file_count',
+                'total_compressed_size',
+                'total_uncompressed_size',
+                'global_compression_ratio',
+                'risk_level',
+                'risk_flags',
+                'warnings',
+                'errors',
+                'recommended_action',
+                'entries',
+            }
+            expected_entry_keys = {
+                'original_name',
+                'normalized_name',
+                'safe_name',
+                'compressed_size',
+                'uncompressed_size',
+                'compression_method',
+                'compression_ratio',
+                'crc32',
+                'risk_flags',
+            }
+            assert expected_report_keys.issubset(payload)
             assert payload['risk_level'] == 'ok'
-            assert payload['entries'][0]['filename'] == 'safe.txt'
+            assert payload['risk_flags'] == []
+            assert payload['recommended_action']
+            assert expected_entry_keys.issubset(payload['entries'][0])
+            assert payload['entries'][0]['original_name'] == 'safe.txt'
+            assert payload['entries'][0]['safe_name'] == 'safe.txt'
 
     def test_inspect_markdown_output(self, runner):
         with runner.isolated_filesystem():
@@ -295,6 +324,10 @@ class TestInspectCommand:
 
             assert result.exit_code == 0
             assert '# ZIP Inspection Report' in result.output
+            assert '## Archive Summary' in result.output
+            assert '## Risk Flags' in result.output
+            assert '## Entries' in result.output
+            assert 'Recommended action' in result.output
             assert 'safe.txt' in result.output
 
     def test_inspect_reports_risky_archive(self, runner):
@@ -309,6 +342,8 @@ class TestInspectCommand:
             payload = json.loads(result.output)
             flags = {flag for entry in payload['entries'] for flag in entry['risk_flags']}
             assert payload['risk_level'] == 'high'
+            assert 'path_traversal' in payload['risk_flags']
+            assert 'windows_drive_path' in payload['risk_flags']
             assert 'path_traversal' in flags
             assert 'windows_drive_path' in flags
 
@@ -357,6 +392,17 @@ class TestVerifyCommand:
             assert result.exit_code == 1
             assert 'suspicious_extension' in result.output
 
+    def test_verify_accepts_configured_max_risk(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('suspicious.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('payload.exe', 'MZ')
+
+            result = runner.invoke(cli, ['verify', 'suspicious.zip', '--max-risk', 'medium'])
+
+            assert result.exit_code == 0
+            assert 'OK' in result.output
+            assert 'max risk' in result.output
+
 
 class TestSafeExtractCommand:
     """Tests for safe-extract command."""
@@ -393,6 +439,17 @@ class TestSafeExtractCommand:
             assert result.exit_code == 0
             assert Path('out/evil.txt').exists()
             assert not Path('evil.txt').exists()
+
+    def test_safe_extract_dry_run_does_not_write_files(self, runner):
+        with runner.isolated_filesystem():
+            Path('safe.txt').write_text("Safe content")
+            runner.invoke(cli, ['compress', 'safe.txt', '-o', 'safe.zip'])
+
+            result = runner.invoke(cli, ['safe-extract', 'safe.zip', 'out', '--dry-run'])
+
+            assert result.exit_code == 0
+            assert 'Dry run OK' in result.output
+            assert not Path('out').exists()
 
 
 class TestConfigCommand:

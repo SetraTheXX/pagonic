@@ -57,6 +57,28 @@ size totals, per-entry metadata, risk flags, warnings, errors, and a summary
 risk level. CLI commands such as `inspect`, `verify`, and `safe-extract` should
 reuse this service instead of duplicating path or ZIP bomb checks.
 
+The stable alpha report keys are:
+
+- Archive report: `archive_path`, `file_count`, `total_compressed_size`,
+  `total_uncompressed_size`, `global_compression_ratio`, `risk_level`,
+  `risk_flags`, `warnings`, `errors`, `recommended_action`, `entries`.
+- Entry report: `original_name`, `normalized_name`, `safe_name`,
+  `compressed_size`, `uncompressed_size`, `compression_method`,
+  `compression_ratio`, `crc32`, `risk_flags`.
+
+Risk flag metadata lives in `RISK_CATALOG`. Each catalog entry has an `id`,
+`title`, `severity`, `explanation`, and `recommended_action`. Keep new report
+renderers and CLI commands attached to that catalog instead of hardcoding
+parallel risk descriptions.
+
+CLI policy defaults:
+
+- `verify` passes only archives at or below `--max-risk low` and without
+  validation errors.
+- `safe-extract` allows up to `--allow-risk medium` by default, refuses
+  validation errors, and supports `--dry-run` for decision checks without
+  writing files.
+
 ## Development Notes
 
 - Keep the import package name `Pagonic` until a planned migration introduces lowercase compatibility.
