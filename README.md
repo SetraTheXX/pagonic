@@ -32,10 +32,13 @@ The GUI is optional. If PyQt6 is not installed, `pagonic-gui` exits with a clear
 pagonic --help
 pagonic inspect suspicious.zip
 pagonic inspect suspicious.zip --json
+pagonic inspect suspicious.zip --markdown
 pagonic verify release.zip
+pagonic verify release.zip --max-risk medium
 pagonic safe-extract upload.zip output/
+pagonic safe-extract upload.zip output/ --dry-run
+pagonic list archive.zip --tree
 pagonic compress path/to/file.txt -o archive.zip
-pagonic list archive.zip
 pagonic config list
 ```
 
@@ -77,9 +80,26 @@ pyproject.toml    package metadata and tool config
 ## Risk Signals
 
 Inspection reports are deterministic and do not use runtime AI. Current risk
-flags include path traversal, absolute paths, Windows drive paths, hidden files,
-high compression ratios, unsupported compression methods, suspicious extensions,
-and CRC or structure errors.
+flags include:
+
+| Flag | Severity | Meaning |
+| --- | --- | --- |
+| `path_traversal` | `high` | Entry contains `..` path segments. |
+| `absolute_path` | `high` | Entry uses a POSIX absolute path. |
+| `windows_drive_path` | `high` | Entry looks like a Windows drive path. |
+| `hidden_file` | `low` | Entry basename starts with `.`. |
+| `empty_filename` | `medium` | Entry cannot be mapped to a useful safe path. |
+| `too_many_files` | `high` | Archive exceeds the configured file-count limit. |
+| `large_uncompressed_size` | `high` | Archive exceeds the configured uncompressed-size limit. |
+| `high_compression_ratio` | `high` | Entry expands much more than its compressed size. |
+| `unsupported_compression_method` | `medium` | Entry uses a ZIP method Pagonic does not currently support. |
+| `crc_or_structure_error` | `critical` | ZIP structure or CRC validation failed. |
+| `suspicious_extension` | `medium` | Entry has an executable or script-like extension. |
+
+`pagonic inspect --json` emits a stable alpha report with archive totals,
+overall `risk_level`, top-level `risk_flags`, `recommended_action`, and per-entry
+metadata. `pagonic inspect --markdown` renders the same inspection as a saved
+human-readable report.
 
 ## Status
 

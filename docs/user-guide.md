@@ -14,21 +14,90 @@ Verify an archive in automation:
 
 ```bash
 pagonic verify archive.zip
+pagonic verify archive.zip --max-risk medium
 ```
 
-`verify` exits with `0` for `ok` or `low` risk archives and `1` for
-`medium`, `high`, `critical`, or invalid archives.
+`verify` exits with `0` when the archive risk is at or below `--max-risk` and
+there are no validation errors. The default maximum is `low`, so `medium`,
+`high`, `critical`, or invalid archives fail unless a higher threshold is
+explicitly selected.
 
 Inspect and extract with a risk gate:
 
 ```bash
 pagonic safe-extract archive.zip output/
+pagonic safe-extract archive.zip output/ --dry-run
 pagonic safe-extract archive.zip output/ --allow-risk high
 ```
 
 By default, `safe-extract` refuses `high` and `critical` risk archives before
 writing files. Even when risk is explicitly allowed, extraction still uses
-Pagonic's secure path handling.
+Pagonic's secure path handling. Use `--dry-run` to see whether extraction would
+be allowed without creating the output directory or writing files.
+
+## Inspection Reports
+
+`pagonic inspect --json` is intended for automation. The current alpha report
+shape includes:
+
+```json
+{
+  "archive_path": "archive.zip",
+  "file_count": 1,
+  "total_compressed_size": 120,
+  "total_uncompressed_size": 200,
+  "global_compression_ratio": 1.67,
+  "risk_level": "ok",
+  "risk_flags": [],
+  "warnings": [],
+  "errors": [],
+  "recommended_action": "No inspection risks were detected. Safe extraction is acceptable under normal trust assumptions.",
+  "entries": [
+    {
+      "original_name": "docs/readme.txt",
+      "normalized_name": "docs/readme.txt",
+      "safe_name": "docs/readme.txt",
+      "compressed_size": 120,
+      "uncompressed_size": 200,
+      "compression_method": 8,
+      "compression_ratio": 1.67,
+      "crc32": "00000000",
+      "risk_flags": []
+    }
+  ]
+}
+```
+
+The exact numeric values depend on the archive. The field names above are the
+stable alpha surface for report consumers. `pagonic inspect --markdown` renders
+the same report as a saved Markdown document with an archive summary, risk flag
+table, entry table, and warnings/errors sections.
+
+## Risk Levels
+
+| Level | Meaning |
+| --- | --- |
+| `ok` | No inspection risks were detected. |
+| `low` | Low-risk signal that should be reviewed but usually does not block automation. |
+| `medium` | Review before extraction or automation. |
+| `high` | Do not extract automatically without an explicit policy decision. |
+| `critical` | Reject for automation; the archive is invalid or structurally unsafe. |
+
+## Risk Flags
+
+| Flag | Severity |
+| --- | --- |
+| `path_traversal` | `high` |
+| `absolute_path` | `high` |
+| `windows_drive_path` | `high` |
+| `hidden_file` | `low` |
+| `empty_filename` | `medium` |
+| `too_many_files` | `high` |
+| `large_uncompressed_size` | `high` |
+| `high_compression_ratio` | `high` |
+| `unsupported_compression_method` | `medium` |
+| `crc_or_structure_error` | `critical` |
+| `suspicious_extension` | `medium` |
 
 Compress files:
 
@@ -47,6 +116,7 @@ List archive contents:
 ```bash
 pagonic list archive.zip
 pagonic list archive.zip --long
+pagonic list archive.zip --tree
 ```
 
 Extract an archive:
@@ -78,7 +148,9 @@ Launch:
 pagonic-gui
 ```
 
-The GUI supports drag-and-drop compression and extraction workflows. It is optional and depends on PyQt6.
+The GUI is optional, depends on PyQt6, and is not the primary alpha surface for
+safe ZIP inspection. Prefer the CLI for inspect, verify, report, and
+safe-extract workflows.
 
 ## Python API
 
