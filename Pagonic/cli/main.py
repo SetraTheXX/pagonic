@@ -489,7 +489,7 @@ def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
     """
      Inspect a ZIP archive, then extract only if risk is acceptable.
     """
-    from Pagonic.core.formats.inspection import inspect_archive
+    from Pagonic.core.formats.inspection import ArchiveRisk, inspect_archive
     from Pagonic.core.formats.zip_reader import ZipReader
 
     report = inspect_archive(archive)
@@ -499,6 +499,14 @@ def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
         console.print(
             f"[bold red]Refused[/] {archive} has risk level [red]{report.risk_level}[/] "
             f"above allowed [yellow]{allow_risk}[/]."
+        )
+        console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
+        raise SystemExit(1)
+
+    if ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD in report.risk_flags:
+        console.print(
+            f"[bold red]Refused[/] {archive} contains [red]unsupported_compression_method[/] "
+            "entries that Pagonic cannot extract safely."
         )
         console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
         raise SystemExit(1)

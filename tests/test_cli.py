@@ -25,6 +25,13 @@ def runner():
     return CliRunner()
 
 
+def _write_unsupported_zip(path: str = 'unsupported.zip') -> None:
+    """Create a ZIP with a method Pagonic can inspect but cannot extract."""
+    pytest.importorskip("bz2")
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_BZIP2) as archive:
+        archive.writestr('data.txt', 'unsupported method')
+
+
 @pytest.fixture
 def temp_files(tmp_path):
     """Create temporary test files."""
@@ -347,6 +354,19 @@ class TestInspectCommand:
             assert 'path_traversal' in flags
             assert 'windows_drive_path' in flags
 
+    def test_inspect_reports_unsupported_compression_method(self, runner):
+        with runner.isolated_filesystem():
+            _write_unsupported_zip()
+
+            result = runner.invoke(cli, ['inspect', 'unsupported.zip', '--json'])
+
+            assert result.exit_code == 0
+            payload = json.loads(result.output)
+            flags = {flag for entry in payload['entries'] for flag in entry['risk_flags']}
+            assert payload['risk_level'] == 'medium'
+            assert 'unsupported_compression_method' in payload['risk_flags']
+            assert 'unsupported_compression_method' in flags
+
     def test_inspect_rejects_multiple_output_formats(self, runner):
         with runner.isolated_filesystem():
             Path('safe.txt').write_text("Safe content")
@@ -403,6 +423,18 @@ class TestVerifyCommand:
             assert 'OK' in result.output
             assert 'max risk' in result.output
 
+    def test_verify_unsupported_compression_method_is_deterministic(self, runner):
+        with runner.isolated_filesystem():
+            _write_unsupported_zip()
+
+            default_result = runner.invoke(cli, ['verify', 'unsupported.zip'])
+            allowed_result = runner.invoke(cli, ['verify', 'unsupported.zip', '--max-risk', 'medium'])
+
+            assert default_result.exit_code == 1
+            assert 'unsupported_compression_method' in default_result.output
+            assert allowed_result.exit_code == 0
+            assert 'OK' in allowed_result.output
+
 
 class TestSafeExtractCommand:
     """Tests for safe-extract command."""
@@ -450,6 +482,17 @@ class TestSafeExtractCommand:
             assert result.exit_code == 0
             assert 'Dry run OK' in result.output
             assert not Path('out').exists()
+
+    def test_safe_extract_unsupported_compression_fails_cleanly(self, runner):
+        with runner.isolated_filesystem():
+            _write_unsupported_zip()
+
+            result = runner.invoke(cli, ['safe-extract', 'unsupported.zip', 'out'])
+
+            assert result.exit_code == 1
+            assert 'Traceback' not in result.output
+            assert 'unsupported_compression_method' in result.output
+            assert not Path('out/data.txt').exists()
 
 
 class TestConfigCommand:
