@@ -1,22 +1,20 @@
 """
 Pagonic CLI - Benchmark Command
 ================================
-Performance benchmarking for Pagonic compression engine.
+Local benchmark runner for Pagonic ZIP workflows.
 
-Days 31-35: Advanced Features
+Benchmark output is intended for local validation and regression tracking, not
+as a universal performance claim.
 """
 
 import os
 import time
 import tempfile
 import random
-import string
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
@@ -174,9 +172,11 @@ def run_decompression_benchmark(size_mb: int, level: int, iterations: int) -> di
 @click.option('--decompress-only', is_flag=True, help='Run only decompression benchmark')
 def benchmark(size: int, level: int, iterations: int, compress_only: bool, decompress_only: bool):
     """
-     Run performance benchmark.
+     Run a local benchmark.
     
-    Tests compression and decompression speed with generated test data.
+    Measures compression and decompression on generated test data for local
+    validation and regression tracking. Results are workload-specific and are
+    not universal performance claims.
     
     \b
     Examples:
@@ -187,9 +187,10 @@ def benchmark(size: int, level: int, iterations: int, compress_only: bool, decom
     """
     console.print()
     console.print(Panel.fit(
-        f"[bold magenta] Pagonic Performance Benchmark[/]",
+        f"[bold magenta] Pagonic Local Benchmark[/]",
         subtitle=f"Size: {size}MB | Level: {level} | Iterations: {iterations}",
-        border_style="magenta"
+        border_style="magenta",
+        box=box.ASCII,
     ))
     console.print()
     
@@ -197,37 +198,27 @@ def benchmark(size: int, level: int, iterations: int, compress_only: bool, decom
         # Compression benchmark
         if not decompress_only:
             console.print("[bold cyan] Compression Benchmark[/]")
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console
-            ) as progress:
-                task = progress.add_task("Running compression tests...", total=None)
-                compress_results = run_compression_benchmark(size, level, iterations)
-                progress.update(task, description="[green]Compression tests complete![/]")
+            console.print("[dim]Running compression tests...[/]")
+            compress_results = run_compression_benchmark(size, level, iterations)
+            console.print("[green]Compression tests complete.[/]")
         
         # Decompression benchmark
         if not compress_only:
             console.print()
             console.print("[bold green] Decompression Benchmark[/]")
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console
-            ) as progress:
-                task = progress.add_task("Running decompression tests...", total=None)
-                decompress_results = run_decompression_benchmark(size, level, iterations)
-                progress.update(task, description="[green]Decompression tests complete![/]")
+            console.print("[dim]Running decompression tests...[/]")
+            decompress_results = run_decompression_benchmark(size, level, iterations)
+            console.print("[green]Decompression tests complete.[/]")
         
         # Results table
         console.print()
-        table = Table(title=" Benchmark Results", box=box.ROUNDED)
+        table = Table(title=" Benchmark Results", box=box.ASCII)
         table.add_column("Metric", style="cyan", no_wrap=True)
         table.add_column("Value", style="green")
         table.add_column("Notes", style="dim")
         
         table.add_row(" Test Size", format_size(size * 1024 * 1024), f"{size} MB")
-        table.add_row(" Compression Level", str(level), "0=fastest, 9=best")
+        table.add_row(" Compression Level", str(level), "0=store, 9=more compression")
         table.add_row(" Iterations", str(iterations), "")
         table.add_row("", "", "")  # Separator
         
@@ -267,11 +258,13 @@ def benchmark(size: int, level: int, iterations: int, compress_only: bool, decom
         # Summary panel
         console.print()
         console.print(Panel.fit(
-            f"[bold] Performance Summary[/]\n\n"
-            f"Pagonic achieves [bold green]{compress_results['avg_compress_speed']:.0f} MB/s[/] compression "
-            f"and [bold green]{decompress_results['avg_decompress_speed']:.0f} MB/s[/] decompression "
-            f"for this local benchmark run.",
-            border_style="green"
+            f"[bold] Local Benchmark Notes[/]\n\n"
+            f"Compression measured [bold green]{compress_results['avg_compress_speed']:.0f} MB/s[/]; "
+            f"decompression measured [bold green]{decompress_results['avg_decompress_speed']:.0f} MB/s[/] "
+            f"for this local benchmark run.\n"
+            f"Use these numbers for local validation and regression tracking only.",
+            border_style="green",
+            box=box.ASCII,
         ) if not compress_only and not decompress_only else None)
         
         console.print()
