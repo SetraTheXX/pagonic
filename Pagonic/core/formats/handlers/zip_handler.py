@@ -31,7 +31,7 @@ HANDLER_VERSION = "0.3.0"
 try:
     from ..base import FormatHandler
     from ..errors import CompressionError, ValidationError
-    from ..security import validate_zip_safety, sanitize_path, SecurityError
+    from ..security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
     from ..zip_structs import ZipAyrıştırıcı, CompressionMethods, ZipParseError
     from ..simd_crc32 import fast_crc32
     from ..optimized_decompressor import create_optimized_decompressor
@@ -50,7 +50,7 @@ except ImportError:
         # Fallback for when module is loaded directly via Pagonic package
         from Pagonic.core.formats.base import FormatHandler
         from Pagonic.core.formats.errors import CompressionError, ValidationError
-        from Pagonic.core.formats.security import validate_zip_safety, sanitize_path, SecurityError
+        from Pagonic.core.formats.security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
         from Pagonic.core.formats.zip_structs import ZipAyrıştırıcı, CompressionMethods, ZipParseError
         from Pagonic.core.formats.simd_crc32 import fast_crc32
         from Pagonic.core.formats.optimized_decompressor import create_optimized_decompressor
@@ -70,7 +70,7 @@ except ImportError:
         sys.path.append(str(Path(__file__).parent.parent))
         from base import FormatHandler
         from errors import CompressionError, ValidationError
-        from security import validate_zip_safety, sanitize_path, SecurityError
+        from security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
         from zip_structs import ZipAyrıştırıcı, CompressionMethods, ZipParseError
         from simd_crc32 import fast_crc32
         from optimized_decompressor import create_optimized_decompressor
@@ -617,10 +617,12 @@ class ZipHandler(FormatHandler):
                             extraction_opts = options.copy() if options else {}
                             extraction_opts['chunk_size'] = extraction_strategy.get('chunk_size', 1024*1024)
                             if strategy == 'mmap':
-                                self._decompress_entry_with_mmap(mm, cd_entry, local_header, target_dir, extraction_opts)
+                                output_file_path = self._decompress_entry_with_mmap(mm, cd_entry, local_header, target_dir, extraction_opts)
                             else:
-                                self._decompress_entry(zip_file, cd_entry, local_header, target_dir, extraction_opts)
-                            results["success"].append(cd_entry.filename)
+                                output_file_path = self._decompress_entry(zip_file, cd_entry, local_header, target_dir, extraction_opts)
+                            if output_file_path:
+                                safe_name = os.path.relpath(output_file_path, target_dir).replace("\\", "/")
+                                results["success"].append(safe_name)
                         except Exception as e:
                             results["failed"].append({
                                 "filename": cd_entry.filename,
@@ -645,7 +647,7 @@ class ZipHandler(FormatHandler):
             logger.error("Critical extraction error: %s", e)
             raise CompressionError(f"ZIP decompression failed: {e}")
 
-    def _decompress_entry(self, zip_file: BinaryIO, cd_entry, local_header, target_dir: str, options=None) -> None:
+    def _decompress_entry(self, zip_file: BinaryIO, cd_entry, local_header, target_dir: str, options=None) -> Optional[str]:
         """
         ZIP iindeki tek bir dosyay karr.
         
@@ -673,16 +675,16 @@ class ZipHandler(FormatHandler):
             method_name = rare_methods.get(method_id, f'unknown({method_id})')
             logger.warning("%s encountered rare or unsupported compression method: %s. Skipping file.", cd_entry.filename, method_name)
             # Zarif bozulma: Dosya atlanyor, loglanyor
-            return  # Dosya karlmyor, sistem stabil kalyor
+            return None  # Dosya karlmyor, sistem stabil kalyor
         
         # Prepare output file path
-        output_file_path = os.path.join(target_dir, cd_entry.filename)
+        output_file_path = secure_extract_path(cd_entry.filename, target_dir)
         os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
         
         # Skip directories
         if cd_entry.filename.endswith('/'):
             os.makedirs(output_file_path, exist_ok=True)
-            return
+            return output_file_path
         
         #  Seek to compressed data start
         zip_file.seek(local_header.data_offset)
@@ -738,6 +740,7 @@ class ZipHandler(FormatHandler):
         self._write_chunked(output_file_path, decompressed_data, chunk_size)
         logger.debug("Extracted: %s (%d -> %d bytes)", 
                      cd_entry.filename, cd_entry.compressed_size, cd_entry.uncompressed_size)
+        return output_file_path
         
     def validate(self, file_path: str) -> bool:
         """
@@ -2609,7 +2612,7 @@ class ZipHandler(FormatHandler):
     # Kept strategies: mmap (for large files) + bytearray/threading (default)
 
 
-    def _decompress_entry_with_mmap(self, mm, cd_entry, local_header, target_dir: str, options=None) -> None:
+    def _decompress_entry_with_mmap(self, mm, cd_entry, local_header, target_dir: str, options=None) -> Optional[str]:
         """
         ZIP iindeki tek bir dosyay memory-mapped extraction ile karr.
         """
@@ -2625,11 +2628,11 @@ class ZipHandler(FormatHandler):
                 f"Unsupported compression method: {cd_entry.compression_method} "
                 f"for file {cd_entry.filename}"
             )
-        output_file_path = os.path.join(target_dir, cd_entry.filename)
+        output_file_path = secure_extract_path(cd_entry.filename, target_dir)
         os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
         if cd_entry.filename.endswith('/'):
             os.makedirs(output_file_path, exist_ok=True)
-            return
+            return output_file_path
         data_offset = local_header.data_offset
         compressed_data = mm[data_offset : data_offset + cd_entry.compressed_size]
         if cd_entry.compression_method == CompressionMethods.STORE:
@@ -2653,7 +2656,7 @@ class ZipHandler(FormatHandler):
                     fast_memcpy(buffer, decompressed_data, len(decompressed_data))
                     output_file.write(buffer)
                 logger.debug("[mmap][SIMD] Extracted (STORE): %s (%d bytes)", cd_entry.filename, cd_entry.uncompressed_size)
-                return
+                return output_file_path
         elif cd_entry.compression_method == CompressionMethods.DEFLATE:
             try:
                 decompressed_data = self.hybrid_decompressor.decompress_data(
@@ -2691,6 +2694,7 @@ class ZipHandler(FormatHandler):
         self._write_chunked(output_file_path, decompressed_data, chunk_size)
         logger.debug("Extracted entry: %s (%d -> %d bytes)", 
                      cd_entry.filename, cd_entry.compressed_size, cd_entry.uncompressed_size)
+        return output_file_path
 
 
 def register_zip_handler():
