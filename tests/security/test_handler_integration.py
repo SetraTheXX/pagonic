@@ -94,3 +94,41 @@ class TestZipHandlerSecurity:
         # Mock validate_zip_safety to raise SecurityError for size
         # (It's hard to create a real 10GB zip bomb in test without using disk space/time)
         pass
+
+    @pytest.mark.parametrize(
+        ("entry_name", "safe_name"),
+        [
+            ("../evil.txt", "evil.txt"),
+            ("..\\evil.txt", "evil.txt"),
+            ("nested/../../evil.txt", "nested/evil.txt"),
+        ],
+    )
+    def test_decompress_keeps_traversal_entry_inside_target(self, zip_handler, tmp_path, entry_name, safe_name):
+        """Regression test: ZipHandler.decompress() must not write outside target."""
+        archive = tmp_path / "traversal.zip"
+        output_dir = tmp_path / "out"
+        output_dir.mkdir()
+
+        with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr(entry_name, "escaped")
+
+        result = zip_handler.decompress(str(archive), str(output_dir))
+
+        assert not (tmp_path / "evil.txt").exists()
+        assert (output_dir / safe_name).exists()
+        assert result["success"] == [safe_name]
+
+    def test_decompress_mmap_keeps_traversal_entry_inside_target(self, zip_handler, tmp_path):
+        """Regression test for the mmap extraction branch."""
+        archive = tmp_path / "traversal-mmap.zip"
+        output_dir = tmp_path / "out"
+        output_dir.mkdir()
+
+        with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("../evil.txt", "escaped")
+
+        result = zip_handler.decompress(str(archive), str(output_dir), options={"use_mmap": True})
+
+        assert not (tmp_path / "evil.txt").exists()
+        assert (output_dir / "evil.txt").exists()
+        assert result["success"] == ["evil.txt"]
