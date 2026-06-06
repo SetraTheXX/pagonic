@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from Pagonic.cli.main import cli
+from Pagonic.cli.commands import benchmark as benchmark_module
 
 
 @pytest.fixture
@@ -538,6 +539,40 @@ class TestBenchmarkCommand:
         assert result.exit_code == 0
         assert '--size' in result.output or '-s' in result.output
         assert '--level' in result.output or '-l' in result.output
+        assert 'local' in result.output.lower()
+        assert 'validation' in result.output.lower()
+        assert 'regression tracking' in result.output.lower()
+        assert 'faster than' not in result.output.lower()
+        assert 'achieves' not in result.output.lower()
+
+    def test_benchmark_output_is_ascii_safe_and_conservative(self, runner, monkeypatch):
+        """Benchmark output should avoid fragile Unicode and broad speed claims."""
+        compression_results = {
+            'avg_compress_speed': 12.3,
+            'avg_compress_time': 0.08,
+            'avg_ratio': 15.0,
+            'avg_output_size': 890_000,
+            'compress_speeds': [12.3],
+            'original_size': 1_048_576,
+        }
+        decompression_results = {
+            'avg_decompress_speed': 45.6,
+            'avg_decompress_time': 0.02,
+            'decompress_speeds': [45.6],
+            'original_size': 1_048_576,
+        }
+
+        monkeypatch.setattr(benchmark_module, 'run_compression_benchmark', lambda *args: compression_results)
+        monkeypatch.setattr(benchmark_module, 'run_decompression_benchmark', lambda *args: decompression_results)
+
+        result = runner.invoke(cli, ['benchmark', '-s', '1', '-i', '1'])
+
+        assert result.exit_code == 0
+        assert all(ord(char) < 128 for char in result.output)
+        assert 'local benchmark' in result.output.lower()
+        assert 'regression' in result.output.lower()
+        assert 'achieves' not in result.output.lower()
+        assert 'faster than' not in result.output.lower()
     
     # Note: Actual benchmark tests are slow, so we skip in CI
     @pytest.mark.slow
