@@ -27,18 +27,18 @@ RISK_LEVEL_ORDER = {'ok': 0, 'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
 def cli():
     """
      Pagonic - Safe ZIP Inspection Toolkit
-    
+
     A security-aware ZIP toolkit for inspection, verification,
-    reporting, and safe extraction.
+    reporting, and safe extraction. Inspect before you extract.
     
     \b
     Examples:
-        pagonic compress file1.txt file2.txt archive.zip
+        pagonic compress file1.txt file2.txt -o archive.zip
         pagonic extract archive.zip ./output/
-        pagonic list archive.zip
+        pagonic list archive.zip --tree
         pagonic inspect archive.zip --json
-        pagonic verify archive.zip
-        pagonic safe-extract archive.zip ./output/
+        pagonic verify archive.zip --max-risk low
+        pagonic safe-extract archive.zip ./output/ --dry-run
         pagonic benchmark -s 10
         pagonic config list
     """
@@ -274,11 +274,14 @@ def extract(archive: str, output: str, verbose: bool):
 
 @cli.command()
 @click.argument('archive', type=click.Path(exists=True))
-@click.option('--json', 'json_output', is_flag=True, help='Output a JSON inspection report')
-@click.option('--markdown', 'markdown_output', is_flag=True, help='Output a Markdown inspection report')
+@click.option('--json', 'json_output', is_flag=True, help='Print a machine-readable JSON inspection report')
+@click.option('--markdown', 'markdown_output', is_flag=True, help='Print a human-readable Markdown inspection report')
 def inspect(archive: str, json_output: bool, markdown_output: bool):
     """
-     Inspect a ZIP archive before extraction.
+     Inspect a ZIP archive before extraction without writing files.
+
+    Shows the overall risk level, risk flags, and recommended action so you can
+    decide whether extraction is acceptable.
 
     \b
     Examples:
@@ -437,11 +440,14 @@ def _markdown_cell(value: str) -> str:
     type=click.Choice(['ok', 'low', 'medium', 'high', 'critical']),
     default='low',
     show_default=True,
-    help='Maximum inspection risk level accepted as a passing verification',
+    help='Highest risk level that exits 0; higher risk or validation errors exit 1',
 )
 def verify(archive: str, max_risk: str):
     """
      Verify whether a ZIP archive is safe enough for automation.
+
+    Exit code 0 means the archive risk is at or below --max-risk and no
+    validation errors were found. Exit code 1 means automation should stop.
     """
     from Pagonic.core.formats.inspection import inspect_archive
 
@@ -482,12 +488,15 @@ def verify(archive: str, max_risk: str):
     type=click.Choice(['ok', 'low', 'medium', 'high', 'critical']),
     default='medium',
     show_default=True,
-    help='Maximum inspection risk level allowed before extraction',
+    help='Highest inspection risk allowed before writing files',
 )
-@click.option('--dry-run', is_flag=True, help='Inspect and report the extraction decision without writing files')
+@click.option('--dry-run', is_flag=True, help='Inspect and show the extraction decision; do not create output or write files')
 def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
     """
      Inspect a ZIP archive, then extract only if risk is acceptable.
+
+    Refuses archives above --allow-risk, archives with validation errors, and
+    unsupported compression methods. Use --dry-run to preview the decision.
     """
     from Pagonic.core.formats.inspection import ArchiveRisk, inspect_archive
     from Pagonic.core.formats.zip_reader import ZipReader
@@ -506,9 +515,11 @@ def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
     if ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD in report.risk_flags:
         console.print(
             f"[bold red]Refused[/] {archive} contains [red]unsupported_compression_method[/] "
-            "entries that Pagonic cannot extract safely."
+            "entries. Pagonic can inspect this archive, but safe-extract only "
+            "writes methods it supports."
         )
         console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
+        console.print("[dim]Exit code:[/] 1; no files were written.")
         raise SystemExit(1)
 
     if dry_run:
@@ -535,11 +546,11 @@ def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
 
 @cli.command('list')
 @click.argument('archive', type=click.Path(exists=True))
-@click.option('--long', '-l', is_flag=True, help='Show detailed information')
-@click.option('--tree', 'tree_output', is_flag=True, help='Show entries as a directory tree')
+@click.option('--long', '-l', is_flag=True, help='Show sizes, compression ratio, and method for each entry')
+@click.option('--tree', 'tree_output', is_flag=True, help='Show archive paths as a directory tree')
 def list_contents(archive: str, long: bool, tree_output: bool):
     """
-     List contents of a ZIP archive.
+     List ZIP archive contents without extracting files.
     
     \b
     Examples:
