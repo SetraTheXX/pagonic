@@ -65,11 +65,14 @@ shape includes:
       "compressed_size": 120,
       "uncompressed_size": 200,
       "compression_method": 8,
-      "compression_ratio": 1.67,
       "crc32": "00000000",
-      "risk_flags": []
+      "compression_ratio": 1.67,
+      "risk_flags": [],
+      "filename": "docs/readme.txt",
+      "safe_path": "docs/readme.txt"
     }
-  ]
+  ],
+  "compression_ratio": 1.67
 }
 ```
 
@@ -194,5 +197,6 @@ writer.finalize(progress_callback=progress)
 
 Pagonic is still an alpha-stage project, but the documented release surface is
 covered by the pytest suite. Prefer tested ZIP workflows, keep backups for
-important archives, and treat performance claims as workload-specific until the
-benchmark suite is refreshed.
+important archives, avoid production-critical automation until the API settles,
+and treat performance claims as workload-specific until the benchmark suite is
+refreshed.
