@@ -8,7 +8,7 @@ inspect before you extract.
 - A `pagonic` command-line interface for inspect, verify, safe extract, and ZIP utilities.
 - An optional PyQt6 GUI launched with `pagonic-gui`.
 
-This repository is currently prepared as an alpha-quality public cleanup release. The import package remains `Pagonic` for compatibility; the distribution name is `pagonic`.
+This repository is currently prepared as an alpha-stage, test-backed public release. The import package remains `Pagonic` for compatibility; the distribution name is `pagonic`. No PyPI or TestPyPI package is published for this release; install from a local checkout.
 
 ## Install
 
@@ -41,6 +41,10 @@ pagonic list archive.zip --tree
 pagonic compress path/to/file.txt -o archive.zip
 pagonic config list
 ```
+
+Use `inspect` before extraction for untrusted ZIP files. `safe-extract` applies
+the inspection gate before writing files, supports `--dry-run`, and refuses ZIP
+entries that use unsupported compression methods.
 
 ## Python API Quick Start
 
@@ -103,7 +107,8 @@ human-readable report.
 
 ## Status
 
-The current public target is `0.3.0`: a cleaned alpha with security-aware ZIP
-inspection, gated safe extraction, core ZIP behavior, CLI support, optional GUI
-packaging, MIT license, and CI-ready tests. The next work is stabilization, API
-polish, and documentation tightening before a broader release.
+The current public target is `0.3.0`: an alpha-stage, test-backed release with
+security-aware ZIP inspection, gated safe extraction, core ZIP behavior, CLI
+support, optional GUI packaging, MIT license, and CI-ready tests. The next work
+is stabilization, API polish, and documentation tightening before a broader
+release.

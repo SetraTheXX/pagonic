@@ -30,14 +30,15 @@ pagonic safe-extract archive.zip output/ --dry-run
 pagonic safe-extract archive.zip output/ --allow-risk high
 ```
 
-By default, `safe-extract` refuses `high` and `critical` risk archives before
-writing files. Even when risk is explicitly allowed, extraction still uses
-Pagonic's secure path handling. Use `--dry-run` to see whether extraction would
-be allowed without creating the output directory or writing files.
+By default, `safe-extract` allows up to `medium` risk and refuses `high` and
+`critical` risk archives before writing files. Even when risk is explicitly
+allowed, extraction still uses Pagonic's secure path handling. Use `--dry-run`
+to see whether extraction would be allowed without creating the output directory
+or writing files.
 
 Archives with `unsupported_compression_method` entries are refused by
 `safe-extract` even though the inspection severity is `medium`, because Pagonic
-cannot safely extract methods it does not implement.
+does not extract methods it does not implement.
 
 ## Inspection Reports
 
@@ -191,4 +192,7 @@ writer.finalize(progress_callback=progress)
 
 ## Limits
 
-Pagonic is still an alpha project. Prefer tested ZIP workflows, keep backups for important archives, and treat performance claims as workload-specific until the benchmark suite is refreshed.
+Pagonic is still an alpha-stage project, but the documented release surface is
+covered by the pytest suite. Prefer tested ZIP workflows, keep backups for
+important archives, and treat performance claims as workload-specific until the
+benchmark suite is refreshed.
