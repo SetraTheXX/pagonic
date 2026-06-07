@@ -82,6 +82,7 @@ class TestHelpCommand:
         result = runner.invoke(cli, ['--help'])
         assert result.exit_code == 0
         assert 'Inspect before you extract' in result.output
+        assert 'pagonic inspect archive.zip --json' in result.output
         assert 'pagonic compress file1.txt file2.txt -o archive.zip' in result.output
         assert 'pagonic safe-extract archive.zip ./output/ --dry-run' in result.output
         assert 'compress' in result.output

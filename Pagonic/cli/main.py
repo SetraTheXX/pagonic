@@ -33,12 +33,11 @@ def cli():
     
     \b
     Examples:
-        pagonic compress file1.txt file2.txt -o archive.zip
-        pagonic extract archive.zip ./output/
-        pagonic list archive.zip --tree
         pagonic inspect archive.zip --json
         pagonic verify archive.zip --max-risk low
         pagonic safe-extract archive.zip ./output/ --dry-run
+        pagonic list archive.zip --tree
+        pagonic compress file1.txt file2.txt -o archive.zip
         pagonic benchmark -s 10
         pagonic config list
     """

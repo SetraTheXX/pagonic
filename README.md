@@ -12,13 +12,22 @@ This repository is currently prepared as an alpha-stage, test-backed public rele
 
 ## Install
 
+No PyPI or TestPyPI package is published for this release, so install from a
+local checkout after cloning the repository.
+
+For CLI-only use from a local checkout:
+
+```bash
+python -m pip install .
+```
+
 For local development:
 
 ```bash
 python -m pip install -e .[dev,gui]
 ```
 
-For CLI-only development:
+For CLI-only development with test dependencies:
 
 ```bash
 python -m pip install -e .[dev]
@@ -111,4 +120,5 @@ The current public target is `0.3.0`: an alpha-stage, test-backed release with
 security-aware ZIP inspection, gated safe extraction, core ZIP behavior, CLI
 support, optional GUI packaging, MIT license, and CI-ready tests. The next work
 is stabilization, API polish, and documentation tightening before a broader
-release.
+release. It is not intended for production-critical automation yet and is not
+positioned as a general multi-format desktop archive manager.
