@@ -1,4 +1,4 @@
-"""Pagonic ZIP compression library."""
+"""Pagonic security-aware ZIP inspection and extraction toolkit."""
 
 __version__ = "0.3.0"
 __author__ = "Pagonic contributors"

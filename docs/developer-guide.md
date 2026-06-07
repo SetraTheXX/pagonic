@@ -78,6 +78,9 @@ CLI policy defaults:
 - `safe-extract` allows up to `--allow-risk medium` by default, refuses
   validation errors, and supports `--dry-run` for decision checks without
   writing files.
+- `safe-extract` also refuses `unsupported_compression_method` archives before
+  extraction, even when the selected risk threshold would otherwise allow
+  `medium`, because unsupported methods cannot be extracted safely by Pagonic.
 
 ## Development Notes
 

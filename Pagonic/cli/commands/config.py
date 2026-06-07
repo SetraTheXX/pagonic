@@ -2,8 +2,6 @@
 Pagonic CLI - Config Command
 =============================
 Configuration management for Pagonic settings.
-
-Days 31-35: Advanced Features
 """
 
 import click

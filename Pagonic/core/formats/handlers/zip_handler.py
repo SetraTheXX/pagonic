@@ -1,14 +1,8 @@
 """
-ZIP Format Handler - V2 with Modular Optimizations
---------------------------------------------------
-ZIP dosyalarnn sktrma ve ama ilemlerini gerekletiren handler.
+Compatibility ZIP format handler.
 
-Bu modl ZIP format destei salar:
-- ZIP dosya okuma/yazma
-- zlib deflate/inflate algoritmas  
-- CRC32 dorulama
-- Directory structure handling
-- Modular optimization helpers
+This module keeps the older handler API available while newer public workflows
+prefer ZipReader, ZipWriter, and the inspection service.
 """
 
 import os
@@ -168,7 +162,7 @@ class MemoryManager:
 
 
 class ZipHandler(FormatHandler):
-    """ZIP format handler implementasyonu."""
+    """Backward-compatible ZIP format handler."""
     
     name = "zip"
     extensions = [".zip"]

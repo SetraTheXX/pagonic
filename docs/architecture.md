@@ -30,8 +30,9 @@ Small and regular archives use Python's `zipfile` backend. Large-file paths can 
 3. `ZipReader.extract_all()` writes entries through secure extraction paths.
 4. Optional callbacks report item progress.
 
-The CLI `safe-extract` command applies this gate automatically and refuses
-`high` or `critical` risk archives by default.
+The CLI `safe-extract` command applies this gate automatically. It refuses
+`high` or `critical` risk archives by default and refuses unsupported ZIP
+compression methods before extraction.
 
 ## Inspection Flow
 

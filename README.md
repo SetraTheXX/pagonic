@@ -92,7 +92,7 @@ flags include:
 | `too_many_files` | `high` | Archive exceeds the configured file-count limit. |
 | `large_uncompressed_size` | `high` | Archive exceeds the configured uncompressed-size limit. |
 | `high_compression_ratio` | `high` | Entry expands much more than its compressed size. |
-| `unsupported_compression_method` | `medium` | Entry uses a ZIP method Pagonic does not currently support. |
+| `unsupported_compression_method` | `medium` | Entry uses a ZIP method Pagonic does not currently support; `safe-extract` refuses it. |
 | `crc_or_structure_error` | `critical` | ZIP structure or CRC validation failed. |
 | `suspicious_extension` | `medium` | Entry has an executable or script-like extension. |
 
