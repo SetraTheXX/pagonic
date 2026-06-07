@@ -1,4 +1,4 @@
-"""Basic Pagonic API usage."""
+"""Basic Pagonic API usage with inspect-first extraction."""
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -21,9 +21,17 @@ def main() -> None:
         writer.finalize()
 
         reader = ZipReader(str(archive))
-        reader.extract_all(str(output))
+        report = reader.inspect()
 
-        print((output / "hello.txt").read_text(encoding="utf-8"))
+        print(f"Archive risk level: {report.risk_level}")
+        print(f"Recommended action: {report.recommended_action}")
+        print(f"Entries inspected: {len(report.entries)}")
+
+        if report.risk_level in {"ok", "low"}:
+            reader.extract_all(str(output))
+            print((output / "hello.txt").read_text(encoding="utf-8"))
+        else:
+            print("Archive was not extracted because inspection found risk signals.")
 
 
 if __name__ == "__main__":
