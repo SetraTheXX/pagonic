@@ -705,57 +705,46 @@ def test_handler_priority():
     assert low_priority_handler.name == "low", f"Expected low priority handler but got {low_priority_handler.name}"
     assert low_priority_handler == handler_low
 
-def test_handler_compression_decompression():
+def test_handler_compression_decompression(tmp_path):
     """Test handler compression and decompression methods"""
     registry = FormatRegistry()
     handler = registry.register(MockFormatHandler)
     
     # Mock file lists
-    files_to_compress = ["file1.txt", "file2.txt"]
-    output_archive = "output.zip"
-    
-    try:
-        # Compression should succeed
-        handler.compress(files_to_compress, output_archive)
-        
-        # Verify compressed files exist
-        assert os.path.exists(output_archive)
-        for file_path in files_to_compress:
-            assert os.path.exists(file_path)
-        
-        # Decompression should succeed
-        handler.decompress(output_archive, "output_dir")
-        
-        # Verify decompressed files exist
-        for file_path in files_to_compress:
-            decompressed_path = os.path.join("output_dir", file_path)
-            assert os.path.exists(decompressed_path)
-            # Verify content
-            with open(decompressed_path, "r") as f:
-                content = f.read()
-                assert f"decompressed content of {file_path}" in content
-    
-    finally:
-        # Clean up test files
-        if os.path.exists(output_archive):
-            os.unlink(output_archive)
-        for file_path in files_to_compress:
-            if os.path.exists(file_path):
-                os.unlink(file_path)
-        if os.path.exists("output_dir"):
-            for file in os.listdir("output_dir"):
-                os.unlink(os.path.join("output_dir", file))
-            os.rmdir("output_dir")
+    files_to_compress = [str(tmp_path / "file1.txt"), str(tmp_path / "file2.txt")]
+    output_archive = str(tmp_path / "output.zip")
+    output_dir = str(tmp_path / "output_dir")
 
-def test_handler_encryption_support():
+    # Compression should succeed
+    handler.compress(files_to_compress, output_archive)
+
+    # Verify compressed files exist
+    assert os.path.exists(output_archive)
+    for file_path in files_to_compress:
+        assert os.path.exists(file_path)
+
+    # Decompression should succeed
+    handler.decompress(output_archive, output_dir)
+
+    # Verify decompressed files exist
+    for file_path in files_to_compress:
+        file_name = os.path.basename(file_path)
+        decompressed_path = os.path.join(output_dir, file_name)
+        assert os.path.exists(decompressed_path)
+        # Verify content
+        with open(decompressed_path, "r") as f:
+            content = f.read()
+            assert f"decompressed content of {file_name}" in content
+
+def test_handler_encryption_support(tmp_path):
     """Test handler encryption capability"""
     registry = FormatRegistry()
     handler = registry.register(MockFormatHandler)
     
     # Create test file
     test_data = b"This is test content for encryption"
-    test_file = "test_file.txt"
-    output_dir = "output_dir"
+    test_file = str(tmp_path / "test_file.txt")
+    output_dir = str(tmp_path / "output_dir")
     
     os.makedirs(output_dir, exist_ok=True)
     with open(test_file, "wb") as f:
@@ -769,22 +758,15 @@ def test_handler_encryption_support():
     assert os.path.exists(test_file + ".enc")
     
     # Decryption should succeed
-    handler.decrypt(test_file + ".enc", os.path.join(output_dir, test_file), options)
-    assert os.path.exists(os.path.join(output_dir, test_file))
+    output_file = os.path.join(output_dir, os.path.basename(test_file))
+    handler.decrypt(test_file + ".enc", output_file, options)
+    assert os.path.exists(output_file)
     
     # Check that original and decrypted files match
-    with open(test_file, "rb") as f1, open(os.path.join(output_dir, test_file), "rb") as f2:
+    with open(test_file, "rb") as f1, open(output_file, "rb") as f2:
         assert f1.read() == f2.read()
-      # Clean up test files
-    os.unlink(test_file)
-    os.unlink(test_file + ".enc")
-    os.unlink(os.path.join(output_dir, test_file))
-    # Clean up any other files in output_dir
-    for file in os.listdir(output_dir):
-        os.unlink(os.path.join(output_dir, file))
-    os.rmdir(output_dir)
 
-def test_handler_streaming_support():
+def test_handler_streaming_support(tmp_path):
     """Test handler streaming capability"""
     registry = FormatRegistry()
     handler = registry.register(MockFormatHandler)
@@ -793,10 +775,11 @@ def test_handler_streaming_support():
     options = {"bitrate": 128, "format": "mp3"}
     
     # Streaming should succeed
-    handler.stream("input.wav", "output.mp3", options)
+    output_file = tmp_path / "output.mp3"
+    handler.stream(str(tmp_path / "input.wav"), str(output_file), options)
     
     # Check that output file exists
-    assert os.path.exists("output.mp3")
+    assert output_file.exists()
 
 def test_handler_error_handling():
     """Test handler behavior during errors"""
