@@ -3,7 +3,7 @@ import zipfile
 
 import pytest
 
-from Pagonic.core.formats.inspection import ArchiveRisk, RISK_CATALOG, inspect_archive
+from Pagonic.core.formats.inspection import ArchiveRisk, RISK_CATALOG, get_risk_definition, inspect_archive
 from Pagonic.core.formats.security import ZipConstants
 from Pagonic.core.formats.zip_reader import ZipReader
 
@@ -54,7 +54,7 @@ def test_inspect_clean_archive_reports_ok(tmp_path):
 
     payload = report.to_dict()
     json.dumps(payload)
-    assert {
+    assert list(payload) == [
         "archive_path",
         "file_count",
         "total_compressed_size",
@@ -66,18 +66,37 @@ def test_inspect_clean_archive_reports_ok(tmp_path):
         "errors",
         "recommended_action",
         "entries",
-    }.issubset(payload)
-    assert {
+        "compression_ratio",
+    ]
+    assert payload["compression_ratio"] == payload["global_compression_ratio"] == report.compression_ratio
+
+    entry_payload = payload["entries"][0]
+    assert list(entry_payload) == [
         "original_name",
         "normalized_name",
         "safe_name",
         "compressed_size",
         "uncompressed_size",
         "compression_method",
-        "compression_ratio",
         "crc32",
+        "compression_ratio",
         "risk_flags",
-    }.issubset(payload["entries"][0])
+        "filename",
+        "safe_path",
+    ]
+    assert entry_payload["filename"] == entry_payload["original_name"] == report.entries[0].filename
+    assert entry_payload["safe_path"] == entry_payload["safe_name"] == report.entries[0].safe_path
+    assert entry_payload["normalized_name"] == entry_payload["safe_name"]
+
+
+def test_risk_definition_lookup_is_explicit():
+    definition = get_risk_definition(ArchiveRisk.PATH_TRAVERSAL)
+
+    assert definition.id == ArchiveRisk.PATH_TRAVERSAL
+    assert definition.to_dict()["recommended_action"] == definition.recommended_action
+
+    with pytest.raises(KeyError):
+        get_risk_definition("unknown_risk")
 
 
 def test_inspect_reports_path_traversal(tmp_path):
@@ -191,6 +210,28 @@ def test_inspect_reports_unsupported_compression_method(tmp_path):
     assert ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD in report.entries[0].risk_flags
 
 
+def test_risk_flags_are_deterministic_catalog_order(tmp_path, monkeypatch):
+    archive = tmp_path / "ordered-risks.zip"
+    monkeypatch.setattr(ZipConstants, "MAX_COMPRESSION_RATIO", 2)
+    try:
+        import bz2  # noqa: F401
+    except ImportError:
+        pytest.skip("Python bz2 support is unavailable")
+
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_BZIP2) as zip_file:
+        zip_file.writestr("../payload.exe", b"A" * 4096)
+
+    report = inspect_archive(archive)
+
+    assert report.entries[0].risk_flags == [
+        ArchiveRisk.PATH_TRAVERSAL,
+        ArchiveRisk.HIGH_COMPRESSION_RATIO,
+        ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD,
+        ArchiveRisk.SUSPICIOUS_EXTENSION,
+    ]
+    assert report.risk_flags == report.entries[0].risk_flags
+
+
 def test_inspect_corrupt_archive_returns_critical_report(tmp_path):
     archive = tmp_path / "broken.zip"
     archive.write_bytes(b"not a real zip")
@@ -208,7 +249,9 @@ def test_zip_reader_inspect_delegates_to_inspection_service(tmp_path):
     archive = tmp_path / "reader.zip"
     _make_zip(archive, {"file.txt": b"hello"})
 
-    report = ZipReader(str(archive)).inspect()
+    direct_report = inspect_archive(archive)
+    reader_report = ZipReader(str(archive)).inspect()
 
-    assert report.risk_level == "ok"
-    assert report.entries[0].filename == "file.txt"
+    assert reader_report.to_dict() == direct_report.to_dict()
+    assert reader_report.risk_level == "ok"
+    assert reader_report.entries[0].filename == "file.txt"

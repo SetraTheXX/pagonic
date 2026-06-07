@@ -15,9 +15,12 @@ import zlib
 import logging
 import mmap
 from pathlib import Path
-from typing import List, Dict, Any, Optional, BinaryIO, Callable
+from typing import TYPE_CHECKING, List, Dict, Any, Optional, BinaryIO, Callable
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from .inspection import ArchiveInspectionReport
 
 # Import dependencies with fallback
 try:
@@ -92,7 +95,7 @@ class ZipReader:
         entries = self._get_entries()
         return [entry.filename for entry in entries]
 
-    def inspect(self):
+    def inspect(self) -> "ArchiveInspectionReport":
         """Return a structured safety inspection report for this archive."""
         try:
             from .inspection import inspect_archive
