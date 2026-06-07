@@ -138,6 +138,7 @@ RISK_CATALOG: Dict[str, RiskDefinition] = {
 
 
 _RISK_SEVERITY = {risk_id: definition.severity for risk_id, definition in RISK_CATALOG.items()}
+_RISK_CATALOG_ORDER = {risk_id: index for index, risk_id in enumerate(RISK_CATALOG)}
 
 _RISK_ORDER = {"ok": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 _SUSPICIOUS_EXTENSIONS = {".bat", ".cmd", ".com", ".dll", ".exe", ".js", ".msi", ".ps1", ".scr", ".vbs"}
@@ -167,6 +168,7 @@ class ArchiveEntryReport:
         return self.safe_name
 
     def to_dict(self) -> Dict[str, Any]:
+        """Return the stable JSON-compatible report shape for this entry."""
         return {
             "original_name": self.original_name,
             "normalized_name": self.safe_name,
@@ -205,6 +207,7 @@ class ArchiveInspectionReport:
         return self.global_compression_ratio
 
     def to_dict(self) -> Dict[str, Any]:
+        """Return the stable JSON-compatible archive report shape."""
         return {
             "archive_path": self.archive_path,
             "file_count": self.file_count,
@@ -353,7 +356,7 @@ def _recommended_action(risk_level: str, has_errors: bool = False) -> str:
 def _dedupe(values: List[str]) -> List[str]:
     seen = set()
     result = []
-    ordered = sorted(values, key=lambda value: list(RISK_CATALOG).index(value) if value in RISK_CATALOG else len(RISK_CATALOG))
+    ordered = sorted(values, key=_risk_sort_key)
     for value in ordered:
         if value not in seen:
             seen.add(value)
@@ -361,8 +364,15 @@ def _dedupe(values: List[str]) -> List[str]:
     return result
 
 
+def _risk_sort_key(value: str) -> int:
+    return _RISK_CATALOG_ORDER.get(value, len(_RISK_CATALOG_ORDER))
+
+
 def get_risk_definition(risk_id: str) -> RiskDefinition:
-    """Return catalog metadata for a risk flag."""
+    """Return catalog metadata for a risk flag.
+
+    Raises KeyError for unknown risk IDs to keep catalog lookups explicit.
+    """
     return RISK_CATALOG[risk_id]
 
 
