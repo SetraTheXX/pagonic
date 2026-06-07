@@ -85,17 +85,15 @@ def _try_import_crc32c() -> Optional[Callable[[bytes, int], int]]:
     except ImportError:
         pass
         
-    # 2. python-crc32c (11x hızlı! - farklı polynomial ama performance için kabul edelim)
+    # 2. python-crc32c (different polynomial; explicit performance mode only)
     try:
         import crc32c
-        logger.info("crc32c modülü bulundu - 11x SIMD acceleration!")
+        logger.info("crc32c modülü bulundu - explicit performance mode kullanılabilir")
         
         def crc32c_fast_wrapper(data: bytes, initial: int = 0) -> int:
-            # PERFORMANCE MODE: crc32c kullan (11x hızlı)
-            # Not: Polynomial farklı ama çok hızlı performance test için
+            # PERFORMANCE MODE: crc32c kullan
+            # Not: Polynomial farklı; ZIP doğruluğu için accuracy mode kullanılır.
             result = crc32c.crc32c(data)
-            # ZIP uyumluluğu için: normal projede polynomial conversion gerekir
-            # Şimdilik development/benchmark amaçlı kabul edelim
             return result
         
         return crc32c_fast_wrapper
@@ -141,7 +139,7 @@ def _create_optimized_crc32() -> Callable[[bytes, int], int]:
             _simd_type = "fastcrc_simd_zip_compatible"
         elif "crc32c" in str(crc_func):
             _simd_available = True  
-            _simd_type = "crc32c_hardware_11x"
+            _simd_type = "crc32c_hardware"
         return crc_func
     
     # 2. Intel IPP dene
@@ -179,15 +177,15 @@ def fast_crc32(data: bytes, initial: int = 0, performance_mode: bool = False) ->
     SIMD-hızlandırılmış CRC32 hesaplama fonksiyonu
     
     Akıllı strateji:
-    - Production: ZIP-uyumlu CRC32 (fastcrc veya zlib fallback)
+    - Accuracy mode: ZIP-uyumlu CRC32 (fastcrc veya zlib fallback)
     - Büyük dosyalar: SIMD advantage
     - Küçük dosyalar: zlib fallback (overhead'den kaçınma)
     
     Args:
         data: CRC32 hesaplanacak veri
         initial: Başlangıç CRC32 değeri (varsayılan 0)
-        performance_mode: True ise ultra-hızlı benchmark mode
-                         False ise ZIP-uyumlu production mode
+        performance_mode: True ise crc32c tabanlı ölçüm modu
+                         False ise ZIP-uyumlu accuracy mode
     
     Returns:
         int: CRC32 checksum değeri
@@ -208,9 +206,9 @@ def fast_crc32(data: bytes, initial: int = 0, performance_mode: bool = False) ->
     if initial != 0:
         return zlib.crc32(data, initial)
     
-    # Performance mode: Ultra-hızlı benchmark (crc32c)
+    # Performance mode: crc32c tabanlı ölçüm modu
     if performance_mode:
-        if _simd_type == "crc32c_hardware_11x":
+        if _simd_type == "crc32c_hardware":
             import crc32c
             return crc32c.crc32c(data)
         elif _simd_type == "fastcrc_simd_zip_compatible":
@@ -219,7 +217,7 @@ def fast_crc32(data: bytes, initial: int = 0, performance_mode: bool = False) ->
         else:
             return zlib.crc32(data, initial)
     
-    # Production mode: ZIP-uyumlu CRC32
+    # Accuracy mode: ZIP-uyumlu CRC32
     else:
         data_size = len(data)
         
@@ -316,7 +314,7 @@ if __name__ == "__main__":
     print(f"fast CRC32 (performance): {fast_crc_performance:08x}")
     print(f"fast CRC32 (accuracy): {fast_crc_accuracy:08x}")
     print(f"Accuracy mode match: {zlib_crc == fast_crc_accuracy}")
-    print(f"Performance mode (11x faster): {zlib_crc != fast_crc_performance} (different polynomial)")
+    print(f"Performance mode uses different polynomial: {zlib_crc != fast_crc_performance}")
     
     # Performance benchmark
     print("\n=== Performance Benchmark ===")

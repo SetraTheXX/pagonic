@@ -1,7 +1,7 @@
 """
 Pagonic GUI Windows Package
 ===========================
-Window classes for the WinRAR-like interface.
+Window classes for the optional GUI interface.
 """
 
 from .main_window import MainWindow

@@ -35,6 +35,10 @@ writing files. Even when risk is explicitly allowed, extraction still uses
 Pagonic's secure path handling. Use `--dry-run` to see whether extraction would
 be allowed without creating the output directory or writing files.
 
+Archives with `unsupported_compression_method` entries are refused by
+`safe-extract` even though the inspection severity is `medium`, because Pagonic
+cannot safely extract methods it does not implement.
+
 ## Inspection Reports
 
 `pagonic inspect --json` is intended for automation. The current alpha report
