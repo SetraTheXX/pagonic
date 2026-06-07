@@ -33,6 +33,11 @@ def _write_unsupported_zip(path: str = 'unsupported.zip') -> None:
         archive.writestr('data.txt', 'unsupported method')
 
 
+def _compact_output(output: str) -> str:
+    """Normalize wrapped CLI output for phrase assertions."""
+    return " ".join(output.split())
+
+
 @pytest.fixture
 def temp_files(tmp_path):
     """Create temporary test files."""
@@ -76,6 +81,9 @@ class TestHelpCommand:
         """Test that --help shows available commands."""
         result = runner.invoke(cli, ['--help'])
         assert result.exit_code == 0
+        assert 'Inspect before you extract' in result.output
+        assert 'pagonic compress file1.txt file2.txt -o archive.zip' in result.output
+        assert 'pagonic safe-extract archive.zip ./output/ --dry-run' in result.output
         assert 'compress' in result.output
         assert 'extract' in result.output
         assert 'list' in result.output
@@ -99,6 +107,42 @@ class TestHelpCommand:
         assert result.exit_code == 0
         assert '--output' in result.output or '-o' in result.output
         assert '--verbose' in result.output or '-v' in result.output
+
+    def test_inspect_help_explains_report_purpose(self, runner):
+        """Inspect help should explain no-write risk reporting."""
+        result = runner.invoke(cli, ['inspect', '--help'])
+        assert result.exit_code == 0
+        assert 'without writing files' in result.output
+        assert 'overall risk level' in result.output
+        assert 'machine-readable JSON' in result.output
+        assert 'human-readable Markdown' in result.output
+
+    def test_verify_help_explains_exit_codes(self, runner):
+        """Verify help should document automation exit behavior."""
+        result = runner.invoke(cli, ['verify', '--help'])
+        assert result.exit_code == 0
+        assert '--max-risk' in result.output
+        assert 'exits 0' in result.output
+        assert 'Exit code 0' in result.output
+        assert 'Exit code 1' in result.output
+
+    def test_safe_extract_help_explains_gate_and_dry_run(self, runner):
+        """Safe-extract help should document gate and dry-run behavior."""
+        result = runner.invoke(cli, ['safe-extract', '--help'])
+        compact_output = _compact_output(result.output)
+        assert result.exit_code == 0
+        assert '--allow-risk' in result.output
+        assert '--dry-run' in result.output
+        assert 'before writing files' in compact_output
+        assert 'do not create output or write files' in compact_output
+        assert 'unsupported compression methods' in compact_output
+
+    def test_list_help_explains_no_extract_tree_output(self, runner):
+        """List help should make tree output clear."""
+        result = runner.invoke(cli, ['list', '--help'])
+        assert result.exit_code == 0
+        assert 'without extracting files' in result.output
+        assert 'archive paths as a directory tree' in result.output
 
 
 class TestCompressCommand:
@@ -489,10 +533,14 @@ class TestSafeExtractCommand:
             _write_unsupported_zip()
 
             result = runner.invoke(cli, ['safe-extract', 'unsupported.zip', 'out'])
+            compact_output = _compact_output(result.output)
 
             assert result.exit_code == 1
             assert 'Traceback' not in result.output
             assert 'unsupported_compression_method' in result.output
+            assert 'can inspect this archive' in compact_output
+            assert 'safe-extract only writes methods it supports' in compact_output
+            assert 'Exit code:' in result.output
             assert not Path('out/data.txt').exists()
 
 
