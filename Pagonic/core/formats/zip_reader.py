@@ -16,7 +16,7 @@ import zlib
 import logging
 import mmap
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Dict, Any, Optional, BinaryIO, Callable
+from typing import TYPE_CHECKING, List, Any, Optional, BinaryIO, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +28,18 @@ try:
     from .zip_structs import ZipAyrıştırıcı, ZipParseError, CompressionMethods
     from .security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
     from .errors import CompressionError, ValidationError
+    from .results import ArchiveInfo, ExtractionResult, FileInfo
 except ImportError:
     try:
         from Pagonic.core.formats.zip_structs import ZipAyrıştırıcı, ZipParseError, CompressionMethods
         from Pagonic.core.formats.security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
         from Pagonic.core.formats.errors import CompressionError, ValidationError
+        from Pagonic.core.formats.results import ArchiveInfo, ExtractionResult, FileInfo
     except ImportError:
         from zip_structs import ZipAyrıştırıcı, ZipParseError, CompressionMethods
         from security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
         from errors import CompressionError, ValidationError
+        from results import ArchiveInfo, ExtractionResult, FileInfo
 
 
 class ZipReader:
@@ -90,7 +93,7 @@ class ZipReader:
         entries = self._get_entries()
         return [entry.filename for entry in entries]
 
-    def get_entries(self) -> List:
+    def get_entries(self) -> List[Any]:
         """Return parsed archive metadata through a public API."""
         return list(self._get_entries())
 
@@ -103,7 +106,7 @@ class ZipReader:
 
         return inspect_archive(self.path)
 
-    def get_file_info(self, filename: str) -> Optional[Dict[str, Any]]:
+    def get_file_info(self, filename: str) -> Optional[FileInfo]:
         """
         Get metadata for a specific file.
         
@@ -111,7 +114,7 @@ class ZipReader:
             filename: Name of file in archive
             
         Returns:
-            Dict with file metadata or None if not found
+            FileInfo mapping or None if not found
         """
         entries = self._get_entries()
         for entry in entries:
@@ -167,7 +170,7 @@ class ZipReader:
         return output_path
 
     def extract_all(self, output_dir: str, use_mmap: bool = False,
-                    progress_callback: Optional[Callable[[int, int, str], None]] = None) -> Dict[str, Any]:
+                    progress_callback: Optional[Callable[[int, int, str], None]] = None) -> ExtractionResult:
         """
         Extract all files with security checks and progress tracking.
         
@@ -178,7 +181,7 @@ class ZipReader:
                               Called after each file is extracted.
             
         Returns:
-            Dict with extraction results
+            ExtractionResult mapping with per-entry success and failure data
             
         Example:
             def on_progress(current, total, filename):
@@ -439,7 +442,7 @@ class ZipReader:
             self._hybrid_decompressor = HybridFastPathDecompressor()
         return self._hybrid_decompressor
 
-    def get_archive_info(self) -> Dict[str, Any]:
+    def get_archive_info(self) -> ArchiveInfo:
         """Get archive metadata summary."""
         entries = self._get_entries()
         total_compressed = sum(e.compressed_size for e in entries)

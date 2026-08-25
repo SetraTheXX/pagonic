@@ -16,7 +16,7 @@ import os
 import zipfile
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Optional, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +26,20 @@ try:
     from .security import sanitize_path
     from .errors import CompressionError, ValidationError
     from .constants import ZipConstants
+    from .results import CompressionStats
 except ImportError:
     try:
         from Pagonic.core.formats.minimal_zip_writer import MinimalZipWriter
         from Pagonic.core.formats.security import sanitize_path
         from Pagonic.core.formats.errors import CompressionError, ValidationError
         from Pagonic.core.formats.constants import ZipConstants
+        from Pagonic.core.formats.results import CompressionStats
     except ImportError:
         from minimal_zip_writer import MinimalZipWriter
         from security import sanitize_path
         from errors import CompressionError, ValidationError
         from constants import ZipConstants
+        from results import CompressionStats
 
 
 # Constants
@@ -163,7 +166,7 @@ class ZipWriter:
         self._data_to_add.append((safe_arcname, data))
         logger.debug("Queued data: %s (%d bytes)", safe_arcname, len(data))
 
-    def finalize(self, progress_callback: Optional[Callable[[int, int], None]] = None) -> Dict[str, Any]:
+    def finalize(self, progress_callback: Optional[Callable[[int, int], None]] = None) -> CompressionStats:
         """
         Finalize archive and select backend.
         
@@ -171,7 +174,7 @@ class ZipWriter:
             progress_callback: Optional callback(current, total) for progress
             
         Returns:
-            Dict with compression statistics
+            CompressionStats mapping with archive compression statistics
         """
         if self._finalized:
             raise ValidationError("Archive already finalized")
@@ -192,7 +195,7 @@ class ZipWriter:
         return stats
 
     def _write_with_backend(self, total_size: int, 
-                            progress_callback: Optional[Callable] = None) -> Dict[str, Any]:
+                            progress_callback: Optional[Callable] = None) -> CompressionStats:
         """
         Write files using appropriate backend.
         
