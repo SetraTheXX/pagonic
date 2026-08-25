@@ -11,6 +11,7 @@ Features:
 """
 
 import os
+import stat
 import zlib
 import logging
 import mmap
@@ -27,21 +28,15 @@ try:
     from .zip_structs import ZipAyrıştırıcı, ZipParseError, CompressionMethods
     from .security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
     from .errors import CompressionError, ValidationError
-    from .hybrid_decompressor import HybridFastPathDecompressor
-    from .compression_utils import calculate_crc32
 except ImportError:
     try:
         from Pagonic.core.formats.zip_structs import ZipAyrıştırıcı, ZipParseError, CompressionMethods
         from Pagonic.core.formats.security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
         from Pagonic.core.formats.errors import CompressionError, ValidationError
-        from Pagonic.core.formats.hybrid_decompressor import HybridFastPathDecompressor
-        from Pagonic.core.formats.compression_utils import calculate_crc32
     except ImportError:
         from zip_structs import ZipAyrıştırıcı, ZipParseError, CompressionMethods
         from security import validate_zip_safety, sanitize_path, secure_extract_path, SecurityError
         from errors import CompressionError, ValidationError
-        from hybrid_decompressor import HybridFastPathDecompressor
-        from compression_utils import calculate_crc32
 
 
 class ZipReader:
@@ -78,8 +73,8 @@ class ZipReader:
         # Security validation - ZIP bomb protection
         validate_zip_safety(self.path)
         
-        # Initialize hybrid decompressor for fast-path decompression
-        self._hybrid_decompressor = HybridFastPathDecompressor()
+        # Load optional performance helpers only when extraction needs them.
+        self._hybrid_decompressor = None
         
         # Cache for parsed entries
         self._entries_cache = None
@@ -94,6 +89,10 @@ class ZipReader:
         """
         entries = self._get_entries()
         return [entry.filename for entry in entries]
+
+    def get_entries(self) -> List:
+        """Return parsed archive metadata through a public API."""
+        return list(self._get_entries())
 
     def inspect(self) -> "ArchiveInspectionReport":
         """Return a structured safety inspection report for this archive."""
@@ -297,6 +296,8 @@ class ZipReader:
 
     def _decompress_entry(self, zip_file: BinaryIO, cd_entry, local_header, target_dir: str) -> None:
         """Decompress single entry to disk."""
+        _validate_entry_metadata(cd_entry)
+
         # Skip unsupported methods
         if not CompressionMethods.is_supported(cd_entry.compression_method):
             logger.warning("Skipping %s: unsupported compression method %d", 
@@ -336,6 +337,8 @@ class ZipReader:
 
     def _decompress_entry_mmap(self, mm, cd_entry, local_header, target_dir: str) -> None:
         """Decompress entry using memory-mapped file."""
+        _validate_entry_metadata(cd_entry)
+
         # Skip unsupported methods
         if not CompressionMethods.is_supported(cd_entry.compression_method):
             logger.warning("Skipping %s: unsupported compression method %d", 
@@ -376,8 +379,8 @@ class ZipReader:
             
         elif entry.compression_method == CompressionMethods.DEFLATE:
             try:
-                # Use hybrid decompressor for fast-path
-                decompressed_data = self._hybrid_decompressor.decompress_data(
+                # Use the optional hybrid helper when available.
+                decompressed_data = self._get_hybrid_decompressor().decompress_data(
                     compressed_data=compressed_data,
                     filename=entry.filename,
                     uncompressed_size=entry.uncompressed_size
@@ -399,7 +402,7 @@ class ZipReader:
             )
         
         # Validate CRC32
-        calculated_crc = calculate_crc32(decompressed_data) & 0xffffffff
+        calculated_crc = zlib.crc32(decompressed_data) & 0xffffffff
         if calculated_crc != entry.crc32:
             raise CompressionError(
                 f"CRC32 mismatch for {entry.filename}: "
@@ -407,6 +410,19 @@ class ZipReader:
             )
         
         return decompressed_data
+
+    def _get_hybrid_decompressor(self):
+        """Lazily load the optional performance decompressor."""
+        if self._hybrid_decompressor is None:
+            try:
+                from .hybrid_decompressor import HybridFastPathDecompressor
+            except ImportError:
+                try:
+                    from Pagonic.core.formats.hybrid_decompressor import HybridFastPathDecompressor
+                except ImportError:
+                    return _UnavailableHybridDecompressor()
+            self._hybrid_decompressor = HybridFastPathDecompressor()
+        return self._hybrid_decompressor
 
     def get_archive_info(self) -> Dict[str, Any]:
         """Get archive metadata summary."""
@@ -421,3 +437,25 @@ class ZipReader:
             'total_uncompressed_size': total_uncompressed,
             'compression_ratio': total_compressed / total_uncompressed if total_uncompressed > 0 else 0
         }
+
+
+class _UnavailableHybridDecompressor:
+    """Fallback marker that lets the standard zlib path remain available."""
+
+    def decompress_data(self, **kwargs):
+        raise ImportError("Optional hybrid decompressor is unavailable")
+
+
+def _validate_entry_metadata(entry) -> None:
+    """Reject metadata that Pagonic cannot safely materialize."""
+    if getattr(entry, "flags", 0) & 0x1:
+        raise SecurityError(
+            f"Encrypted ZIP entry is not supported: {entry.filename}"
+        )
+
+    unix_mode = (getattr(entry, "external_attrs", 0) >> 16) & 0xFFFF
+    made_by_unix = ((getattr(entry, "version_made_by", 0) >> 8) & 0xFF) == 3
+    if made_by_unix and stat.S_ISLNK(unix_mode):
+        raise SecurityError(
+            f"Symbolic-link ZIP entry is not extracted: {entry.filename}"
+        )

@@ -121,6 +121,15 @@ flags include:
 | `unsupported_compression_method` | `medium`   | Entry uses a ZIP method Pagonic does not currently support; `safe-extract` refuses it. |
 | `crc_or_structure_error`         | `critical` | ZIP structure or CRC validation failed.                                                |
 | `suspicious_extension`           | `medium`   | Entry has an executable or script-like extension.                                      |
+| `duplicate_filename`             | `high`     | The same archive filename appears more than once.                                      |
+| `normalized_path_collision`      | `high`     | Different names resolve to the same sanitized path.                                    |
+| `case_insensitive_collision`     | `high`     | Names collide on case-insensitive filesystems.                                         |
+| `unicode_normalization_collision`| `high`     | Different Unicode spellings normalize to one path.                                     |
+| `symlink_entry`                  | `high`     | ZIP metadata marks the entry as a symbolic link.                                       |
+| `encrypted_entry`                | `high`     | Entry contents cannot be validated by the current workflow.                            |
+| `nested_archive`                 | `low`      | Entry appears to contain another archive; it is not recursively inspected.             |
+| `long_filename`                  | `medium`   | Entry name exceeds the configured review length.                                       |
+| `long_archive_comment`           | `low`      | Archive comment exceeds the configured review length.                                  |
 
 `pagonic inspect --json` emits a stable alpha report with archive totals,
 overall `risk_level`, top-level `risk_flags`, `recommended_action`, and per-entry

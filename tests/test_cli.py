@@ -337,6 +337,7 @@ class TestInspectCommand:
             assert result.exit_code == 0
             payload = json.loads(result.output)
             expected_report_keys = {
+                'schema_version',
                 'archive_path',
                 'file_count',
                 'total_compressed_size',
@@ -361,6 +362,7 @@ class TestInspectCommand:
                 'risk_flags',
             }
             assert expected_report_keys.issubset(payload)
+            assert payload['schema_version'] == '1'
             assert payload['risk_level'] == 'ok'
             assert payload['risk_flags'] == []
             assert payload['recommended_action']
@@ -378,6 +380,7 @@ class TestInspectCommand:
             assert result.exit_code == 0
             assert '# ZIP Inspection Report' in result.output
             assert '## Archive Summary' in result.output
+            assert 'Schema version' in result.output
             assert '## Risk Flags' in result.output
             assert '## Entries' in result.output
             assert 'Recommended action' in result.output

@@ -56,7 +56,7 @@ class ExtractionWorker(QThread):
             
             # Create reader
             reader = ZipReader(self.archive_path)
-            entries = reader._get_entries()
+            entries = reader.get_entries()
             total = len(entries)
             
             if total == 0:

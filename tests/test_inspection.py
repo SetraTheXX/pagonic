@@ -1,9 +1,20 @@
 import json
+import stat
+import unicodedata
+import warnings
 import zipfile
 
 import pytest
 
-from Pagonic.core.formats.inspection import ArchiveRisk, RISK_CATALOG, get_risk_definition, inspect_archive
+from Pagonic.core.formats.inspection import (
+    ARCHIVE_ENTRY_FIELDS,
+    ARCHIVE_REPORT_FIELDS,
+    INSPECTION_SCHEMA_VERSION,
+    ArchiveRisk,
+    RISK_CATALOG,
+    get_risk_definition,
+    inspect_archive,
+)
 from Pagonic.core.formats.security import ZipConstants
 from Pagonic.core.formats.zip_reader import ZipReader
 
@@ -12,6 +23,26 @@ def _make_zip(path, entries):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, data in entries.items():
             archive.writestr(name, data)
+
+
+def _mark_zip_entries_encrypted(path):
+    """Set the ZIP encryption flag without pretending to encrypt test content."""
+    data = bytearray(path.read_bytes())
+    for signature, flag_offset in ((b"PK\x03\x04", 6), (b"PK\x01\x02", 8)):
+        position = 0
+        while True:
+            position = data.find(signature, position)
+            if position < 0:
+                break
+            flags = int.from_bytes(
+                data[position + flag_offset:position + flag_offset + 2],
+                "little",
+            )
+            data[position + flag_offset:position + flag_offset + 2] = (
+                flags | 0x1
+            ).to_bytes(2, "little")
+            position += len(signature)
+    path.write_bytes(data)
 
 
 def test_risk_catalog_defines_stable_metadata_for_all_flags():
@@ -27,6 +58,15 @@ def test_risk_catalog_defines_stable_metadata_for_all_flags():
         ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD,
         ArchiveRisk.CRC_OR_STRUCTURE_ERROR,
         ArchiveRisk.SUSPICIOUS_EXTENSION,
+        ArchiveRisk.DUPLICATE_FILENAME,
+        ArchiveRisk.NORMALIZED_PATH_COLLISION,
+        ArchiveRisk.CASE_INSENSITIVE_COLLISION,
+        ArchiveRisk.UNICODE_NORMALIZATION_COLLISION,
+        ArchiveRisk.SYMLINK_ENTRY,
+        ArchiveRisk.ENCRYPTED_ENTRY,
+        ArchiveRisk.NESTED_ARCHIVE,
+        ArchiveRisk.LONG_FILENAME,
+        ArchiveRisk.LONG_ARCHIVE_COMMENT,
     }
     severities = {"ok", "low", "medium", "high", "critical"}
 
@@ -54,39 +94,27 @@ def test_inspect_clean_archive_reports_ok(tmp_path):
 
     payload = report.to_dict()
     json.dumps(payload)
-    assert list(payload) == [
-        "archive_path",
-        "file_count",
-        "total_compressed_size",
-        "total_uncompressed_size",
-        "global_compression_ratio",
-        "risk_level",
-        "risk_flags",
-        "warnings",
-        "errors",
-        "recommended_action",
-        "entries",
-        "compression_ratio",
-    ]
+    assert tuple(payload) == ARCHIVE_REPORT_FIELDS
+    assert payload["schema_version"] == INSPECTION_SCHEMA_VERSION
+    assert report.schema_version == INSPECTION_SCHEMA_VERSION
+    assert isinstance(payload["file_count"], int)
+    assert isinstance(payload["total_compressed_size"], int)
+    assert isinstance(payload["total_uncompressed_size"], int)
+    assert isinstance(payload["global_compression_ratio"], float)
+    assert isinstance(payload["risk_flags"], list)
     assert payload["compression_ratio"] == payload["global_compression_ratio"] == report.compression_ratio
 
     entry_payload = payload["entries"][0]
-    assert list(entry_payload) == [
-        "original_name",
-        "normalized_name",
-        "safe_name",
-        "compressed_size",
-        "uncompressed_size",
-        "compression_method",
-        "crc32",
-        "compression_ratio",
-        "risk_flags",
-        "filename",
-        "safe_path",
-    ]
+    assert tuple(entry_payload) == ARCHIVE_ENTRY_FIELDS
+    assert isinstance(entry_payload["compressed_size"], int)
+    assert isinstance(entry_payload["uncompressed_size"], int)
+    assert isinstance(entry_payload["compression_method"], int)
+    assert isinstance(entry_payload["compression_ratio"], float)
+    assert isinstance(entry_payload["crc32"], str)
+    assert isinstance(entry_payload["risk_flags"], list)
     assert entry_payload["filename"] == entry_payload["original_name"] == report.entries[0].filename
     assert entry_payload["safe_path"] == entry_payload["safe_name"] == report.entries[0].safe_path
-    assert entry_payload["normalized_name"] == entry_payload["safe_name"]
+    assert entry_payload["normalized_name"] == entry_payload["safe_name"] == report.entries[0].normalized_name
 
 
 def test_risk_definition_lookup_is_explicit():
@@ -210,6 +238,117 @@ def test_inspect_reports_unsupported_compression_method(tmp_path):
     assert ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD in report.entries[0].risk_flags
 
 
+def test_inspect_reports_duplicate_and_normalized_path_collisions(tmp_path):
+    archive = tmp_path / "collisions.zip"
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("duplicate.txt", b"first")
+            zip_file.writestr("duplicate.txt", b"second")
+            zip_file.writestr("./same.txt", b"normalized")
+            zip_file.writestr("same.txt", b"target")
+
+    report = inspect_archive(archive)
+
+    assert report.risk_level == "high"
+    assert ArchiveRisk.DUPLICATE_FILENAME in report.risk_flags
+    assert ArchiveRisk.NORMALIZED_PATH_COLLISION in report.risk_flags
+    assert all(
+        ArchiveRisk.DUPLICATE_FILENAME in entry.risk_flags
+        for entry in report.entries[:2]
+    )
+    assert all(
+        ArchiveRisk.NORMALIZED_PATH_COLLISION in entry.risk_flags
+        for entry in report.entries[2:]
+    )
+
+
+def test_inspect_reports_case_insensitive_collision(tmp_path):
+    archive = tmp_path / "case-collision.zip"
+    _make_zip(archive, {"Readme.txt": b"one", "readme.txt": b"two"})
+
+    report = inspect_archive(archive)
+
+    assert report.risk_level == "high"
+    assert ArchiveRisk.CASE_INSENSITIVE_COLLISION in report.risk_flags
+    assert all(
+        ArchiveRisk.CASE_INSENSITIVE_COLLISION in entry.risk_flags
+        for entry in report.entries
+    )
+
+
+def test_inspect_reports_unicode_normalization_collision(tmp_path):
+    archive = tmp_path / "unicode-collision.zip"
+    composed = unicodedata.normalize("NFC", "café.txt")
+    decomposed = unicodedata.normalize("NFD", "café.txt")
+    _make_zip(archive, {composed: b"one", decomposed: b"two"})
+
+    report = inspect_archive(archive)
+
+    assert report.risk_level == "high"
+    assert ArchiveRisk.UNICODE_NORMALIZATION_COLLISION in report.risk_flags
+    assert all(
+        ArchiveRisk.UNICODE_NORMALIZATION_COLLISION in entry.risk_flags
+        for entry in report.entries
+    )
+
+
+def test_inspect_reports_symlink_metadata(tmp_path):
+    archive = tmp_path / "symlink.zip"
+    symlink_info = zipfile.ZipInfo("link")
+    symlink_info.create_system = 3
+    symlink_info.external_attr = (stat.S_IFLNK | 0o777) << 16
+    with zipfile.ZipFile(archive, "w") as zip_file:
+        zip_file.writestr(symlink_info, b"target.txt")
+
+    report = inspect_archive(archive)
+
+    assert report.risk_level == "high"
+    assert ArchiveRisk.SYMLINK_ENTRY in report.risk_flags
+    assert ArchiveRisk.SYMLINK_ENTRY in report.entries[0].risk_flags
+
+
+def test_inspect_reports_encrypted_entry_without_crashing(tmp_path):
+    archive = tmp_path / "encrypted.zip"
+    _make_zip(archive, {"secret.txt": b"secret"})
+    _mark_zip_entries_encrypted(archive)
+
+    report = inspect_archive(archive)
+
+    assert report.risk_level == "high"
+    assert ArchiveRisk.ENCRYPTED_ENTRY in report.risk_flags
+    assert ArchiveRisk.ENCRYPTED_ENTRY in report.entries[0].risk_flags
+    assert report.errors == []
+    assert report.warnings
+
+
+def test_inspect_reports_nested_archive(tmp_path):
+    archive = tmp_path / "nested.zip"
+    _make_zip(archive, {"payload.zip": b"not recursively inspected"})
+
+    report = inspect_archive(archive)
+
+    assert report.risk_level == "low"
+    assert ArchiveRisk.NESTED_ARCHIVE in report.risk_flags
+    assert ArchiveRisk.NESTED_ARCHIVE in report.entries[0].risk_flags
+
+
+def test_inspect_reports_long_filename_and_comment(tmp_path):
+    archive = tmp_path / "long-metadata.zip"
+    long_name = "a" * (ZipConstants.MAX_PATH_LENGTH + 1) + ".txt"
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        zip_file.comment = b"c" * (ZipConstants.MAX_ARCHIVE_COMMENT_LENGTH + 1)
+        zip_file.writestr(long_name, b"long name")
+
+    report = inspect_archive(archive)
+
+    assert report.risk_level == "medium"
+    assert ArchiveRisk.LONG_FILENAME in report.risk_flags
+    assert ArchiveRisk.LONG_FILENAME in report.entries[0].risk_flags
+    assert ArchiveRisk.LONG_ARCHIVE_COMMENT in report.risk_flags
+    assert report.warnings
+
+
 def test_risk_flags_are_deterministic_catalog_order(tmp_path, monkeypatch):
     archive = tmp_path / "ordered-risks.zip"
     monkeypatch.setattr(ZipConstants, "MAX_COMPRESSION_RATIO", 2)
@@ -255,3 +394,15 @@ def test_zip_reader_inspect_delegates_to_inspection_service(tmp_path):
     assert reader_report.to_dict() == direct_report.to_dict()
     assert reader_report.risk_level == "ok"
     assert reader_report.entries[0].filename == "file.txt"
+
+
+def test_zip_reader_exposes_entry_metadata_through_public_api(tmp_path):
+    archive = tmp_path / "entries.zip"
+    _make_zip(archive, {"folder/file.txt": b"hello"})
+
+    reader = ZipReader(str(archive))
+    entries = reader.get_entries()
+
+    assert len(entries) == 1
+    assert entries[0].filename == "folder/file.txt"
+    assert reader.get_entries() is not entries

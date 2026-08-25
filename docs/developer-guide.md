@@ -47,17 +47,20 @@ Do not commit bytecode, coverage files, local archives, editor settings, virtual
 Prefer the inspection service for untrusted archives:
 
 ```python
-from Pagonic.core.formats.inspection import inspect_archive
+from Pagonic import ZipReader, ZipWriter, inspect_archive
 
 report = inspect_archive("archive.zip")
+reader = ZipReader("archive.zip")
 ```
 
 The report is JSON-serializable through `to_dict()` and includes archive-level
 size totals, per-entry metadata, risk flags, warnings, errors, and a summary
-risk level. CLI commands such as `inspect`, `verify`, and `safe-extract` should
-reuse this service instead of duplicating path or ZIP bomb checks.
+risk level. `ZipWriter` remains the public creation API. CLI commands such as
+`inspect`, `verify`, and `safe-extract` should reuse this service instead of
+duplicating path or ZIP bomb checks.
 
-The stable alpha report keys are:
+The serialized report declares `schema_version: "1"`. The canonical report
+keys are:
 
 - Archive report: `archive_path`, `file_count`, `total_compressed_size`,
   `total_uncompressed_size`, `global_compression_ratio`, `risk_level`,
@@ -65,6 +68,11 @@ The stable alpha report keys are:
 - Entry report: `original_name`, `normalized_name`, `safe_name`,
   `compressed_size`, `uncompressed_size`, `compression_method`,
   `compression_ratio`, `crc32`, `risk_flags`.
+
+The early-alpha aliases `compression_ratio` at archive level and `filename`,
+`safe_path` in entries remain serialized for compatibility. New consumers
+should use `global_compression_ratio`, `original_name`, `normalized_name`, and
+`safe_name`.
 
 Risk flag metadata lives in `RISK_CATALOG`. Each catalog entry has an `id`,
 `title`, `severity`, `explanation`, and `recommended_action`. Keep new report
