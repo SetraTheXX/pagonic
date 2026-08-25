@@ -38,6 +38,14 @@ python -m build
 python -m pip check
 ```
 
+For a wheel-installed CLI smoke check after building:
+
+```bash
+python -m pip install --force-reinstall --no-deps dist/*.whl
+pagonic --version
+pagonic inspect --help
+```
+
 ## Repository Hygiene
 
 Do not commit bytecode, coverage files, local archives, editor settings, virtual environments, or old planning logs. Public documentation should live in `README.md`, `CHANGELOG.md`, and `docs/`.
@@ -102,3 +110,5 @@ CLI policy defaults:
 - Prefer focused tests for behavior changes and run the full suite before publishing changes.
 - Avoid adding claims about acceleration or automation unless the code and tests support them.
 - Keep the public product direction focused on ZIP inspection, verification, reporting, and safe extraction rather than general archive-manager competition.
+- See [0.4 migration notes](migration-0.4.md) before moving new code toward the
+  next public API surface.
