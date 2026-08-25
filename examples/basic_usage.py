@@ -1,7 +1,13 @@
 """Basic Pagonic API usage with inspect-first extraction."""
 
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+# Keep the example runnable both as a module and as a direct script.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from Pagonic.core.formats.zip_reader import ZipReader
 from Pagonic.core.formats.zip_writer import ZipWriter
