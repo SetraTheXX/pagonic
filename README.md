@@ -47,6 +47,13 @@ For CLI-only development with test dependencies:
 python -m pip install -e .[dev]
 ```
 
+Experimental performance helpers are optional and are not required by inspection
+or safe extraction:
+
+```bash
+python -m pip install -e .[performance]
+```
+
 The GUI is optional. If PyQt6 is not installed, `pagonic-gui` exits with a clear install message.
 
 ## CLI Quick Start

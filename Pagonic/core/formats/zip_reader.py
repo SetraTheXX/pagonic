@@ -216,11 +216,23 @@ class ZipReader:
                         local_header = parser.parse_local_file_header(entry)
                         
                         if mm is not None:
-                            self._decompress_entry_mmap(mm, entry, local_header, output_dir)
+                            output_path = self._decompress_entry_mmap(
+                                mm, entry, local_header, output_dir
+                            )
                         else:
-                            self._decompress_entry(zip_file, entry, local_header, output_dir)
-                        
-                        results["success"].append(entry.filename)
+                            output_path = self._decompress_entry(
+                                zip_file, entry, local_header, output_dir
+                            )
+
+                        if output_path is None:
+                            raise CompressionError(
+                                f"Entry was not extracted: {entry.filename}"
+                            )
+
+                        safe_name = os.path.relpath(
+                            output_path, os.path.abspath(output_dir)
+                        ).replace(os.sep, "/")
+                        results["success"].append(safe_name)
                         
                         # Progress callback - called after successful extraction
                         if progress_callback:
@@ -294,7 +306,7 @@ class ZipReader:
         
         return self._entries_cache
 
-    def _decompress_entry(self, zip_file: BinaryIO, cd_entry, local_header, target_dir: str) -> None:
+    def _decompress_entry(self, zip_file: BinaryIO, cd_entry, local_header, target_dir: str) -> Optional[str]:
         """Decompress single entry to disk."""
         _validate_entry_metadata(cd_entry)
 
@@ -334,8 +346,9 @@ class ZipReader:
         
         logger.debug("Extracted: %s (%d -> %d bytes)", 
                     cd_entry.filename, cd_entry.compressed_size, cd_entry.uncompressed_size)
+        return output_path
 
-    def _decompress_entry_mmap(self, mm, cd_entry, local_header, target_dir: str) -> None:
+    def _decompress_entry_mmap(self, mm, cd_entry, local_header, target_dir: str) -> Optional[str]:
         """Decompress entry using memory-mapped file."""
         _validate_entry_metadata(cd_entry)
 
@@ -371,6 +384,8 @@ class ZipReader:
         # Write to file
         with open(output_path, 'wb') as f:
             f.write(decompressed_data)
+
+        return output_path
 
     def _decompress_data(self, compressed_data: bytes, entry) -> bytes:
         """Decompress data based on compression method."""

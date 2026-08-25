@@ -24,8 +24,6 @@ classifiers = [
 dependencies = [
     "click>=8.1.7",
     "rich>=13.7.0",
-    "psutil>=5.9.0",
-    "numpy>=1.24.0",
 ]
 
 [project.optional-dependencies]
@@ -34,8 +32,13 @@ dev = [
     "coverage>=7.0.0",
     "pytest>=8.3.5",
     "pytest-cov>=6.1.1",
+    "psutil>=5.9.0",
 ]
 gui = ["PyQt6>=6.6.0"]
+performance = [
+    "numpy>=1.24.0",
+    "psutil>=5.9.0",
+]
 
 [project.scripts]
 pagonic = "Pagonic.cli.main:cli"

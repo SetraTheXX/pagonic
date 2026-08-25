@@ -26,20 +26,17 @@ try:
     from .security import sanitize_path
     from .errors import CompressionError, ValidationError
     from .constants import ZipConstants
-    from .compression_utils import calculate_crc32
 except ImportError:
     try:
         from Pagonic.core.formats.minimal_zip_writer import MinimalZipWriter
         from Pagonic.core.formats.security import sanitize_path
         from Pagonic.core.formats.errors import CompressionError, ValidationError
         from Pagonic.core.formats.constants import ZipConstants
-        from Pagonic.core.formats.compression_utils import calculate_crc32
     except ImportError:
         from minimal_zip_writer import MinimalZipWriter
         from security import sanitize_path
         from errors import CompressionError, ValidationError
         from constants import ZipConstants
-        from compression_utils import calculate_crc32
 
 
 # Constants

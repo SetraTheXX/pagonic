@@ -59,6 +59,10 @@ risk level. `ZipWriter` remains the public creation API. CLI commands such as
 `inspect`, `verify`, and `safe-extract` should reuse this service instead of
 duplicating path or ZIP bomb checks.
 
+`ZipHandler` is retained only as a compatibility facade. Its `compress()` and
+`decompress()` methods delegate to `ZipWriter` and `ZipReader`; new features
+must be added to those public APIs first rather than to the facade.
+
 The serialized report declares `schema_version: "1"`. The canonical report
 keys are:
 
@@ -94,6 +98,7 @@ CLI policy defaults:
 
 - Keep the import package name `Pagonic` until a planned migration introduces lowercase compatibility.
 - Keep PyQt6 behind the `gui` optional dependency.
+- Keep `numpy` and the optional performance stack behind the `performance` extra; the inspector and safe-extract paths must not require it.
 - Prefer focused tests for behavior changes and run the full suite before publishing changes.
 - Avoid adding claims about acceleration or automation unless the code and tests support them.
 - Keep the public product direction focused on ZIP inspection, verification, reporting, and safe extraction rather than general archive-manager competition.
