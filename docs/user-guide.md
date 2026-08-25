@@ -40,6 +40,18 @@ Archives with `unsupported_compression_method` entries are refused by
 `safe-extract` even though the inspection severity is `medium`, because Pagonic
 does not extract methods it does not implement.
 
+### Command Policy
+
+Use `inspect` before extraction when the archive is untrusted. For automation,
+`verify` returns exit code `0` only when the report is within `--max-risk` and
+has no validation errors. `safe-extract` applies the same inspection gate before
+writing files and supports `--dry-run`.
+
+The older `extract` command remains as a compatibility command for trusted
+archives. It uses secure path handling, but it is not an inspection policy gate;
+use `safe-extract` for untrusted input. `list` and `info` are read-only display
+commands and do not replace an inspection report.
+
 ## Inspection Reports
 
 `pagonic inspect --json` is intended for automation. The current alpha report

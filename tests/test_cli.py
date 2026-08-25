@@ -106,6 +106,9 @@ class TestHelpCommand:
         """Test extract command help."""
         result = runner.invoke(cli, ['extract', '--help'])
         assert result.exit_code == 0
+        assert 'trusted ZIP archive' in result.output
+        assert 'does not apply the inspection risk gate' in _compact_output(result.output)
+        assert 'safe-extract' in result.output
         assert '--output' in result.output or '-o' in result.output
         assert '--verbose' in result.output or '-v' in result.output
 
@@ -144,6 +147,14 @@ class TestHelpCommand:
         assert result.exit_code == 0
         assert 'without extracting files' in result.output
         assert 'archive paths as a directory tree' in result.output
+        assert 'not a security report' in _compact_output(result.output)
+
+    def test_info_help_points_to_inspection_policy(self, runner):
+        """Info help should distinguish metadata display from risk decisions."""
+        result = runner.invoke(cli, ['info', '--help'])
+        assert result.exit_code == 0
+        assert 'does not apply the inspection risk policy' in _compact_output(result.output)
+        assert 'pagonic inspect' in result.output
 
 
 class TestCompressCommand:
@@ -484,6 +495,16 @@ class TestVerifyCommand:
             assert allowed_result.exit_code == 0
             assert 'OK' in allowed_result.output
 
+    def test_verify_reports_validation_errors_separately_from_risk_threshold(self, runner):
+        with runner.isolated_filesystem():
+            Path('broken.zip').write_bytes(b'not a ZIP archive')
+
+            result = runner.invoke(cli, ['verify', 'broken.zip', '--max-risk', 'critical'])
+
+            assert result.exit_code == 1
+            assert 'validation errors' in _compact_output(result.output)
+            assert 'above max risk' not in _compact_output(result.output)
+
 
 class TestSafeExtractCommand:
     """Tests for safe-extract command."""
@@ -546,6 +567,20 @@ class TestSafeExtractCommand:
             assert 'safe-extract only writes methods it supports' in compact_output
             assert 'Exit code:' in result.output
             assert not Path('out/data.txt').exists()
+
+    def test_safe_extract_reports_validation_errors_separately_from_risk_threshold(self, runner):
+        with runner.isolated_filesystem():
+            Path('broken.zip').write_bytes(b'not a ZIP archive')
+
+            result = runner.invoke(
+                cli,
+                ['safe-extract', 'broken.zip', 'out', '--allow-risk', 'critical'],
+            )
+
+            assert result.exit_code == 1
+            assert 'validation errors' in _compact_output(result.output)
+            assert 'above allowed' not in _compact_output(result.output)
+            assert not Path('out').exists()
 
 
 class TestConfigCommand:
