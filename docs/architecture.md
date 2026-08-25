@@ -8,9 +8,11 @@ inspection first, extraction second.
 
 - `Pagonic.core.formats.zip_writer.ZipWriter` writes archives and normalizes compression levels.
 - `Pagonic.core.formats.zip_reader.ZipReader` reads archive entries and extracts files.
+- `Pagonic.core.formats.results` defines typed contracts for stable reader/writer result mappings.
 - `Pagonic.core.formats.inspection.inspect_archive` produces structured risk reports without extraction.
 - `Pagonic.core.formats.handlers.zip_handler.ZipHandler` is a thin compatibility facade for older tests and workflows; it is not the center of new development.
 - `Pagonic.core.formats.security` validates archive safety and sanitizes archive paths.
+- `Pagonic.core.config_manager.ConfigManager` stores user configuration with isolated mutable defaults.
 - `Pagonic.cli` exposes the `pagonic` command.
 - `Pagonic.gui` exposes the optional PyQt6 interface through lazy imports.
 

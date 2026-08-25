@@ -13,6 +13,7 @@ Features:
 
 import json
 import logging
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -69,6 +70,11 @@ class ConfigManager:
         "parallel_extraction": False,
         "log_level": "INFO",
     }
+
+    @classmethod
+    def _default_config(cls) -> Dict[str, Any]:
+        """Return an isolated copy of the default configuration."""
+        return deepcopy(cls.DEFAULT_CONFIG)
     
     def __init__(self, config_path: Optional[str] = None):
         """
@@ -97,18 +103,18 @@ class ConfigManager:
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     saved_config = json.load(f)
                     # Merge with defaults (saved values override defaults)
-                    merged = {**self.DEFAULT_CONFIG, **saved_config}
+                    merged = {**self._default_config(), **saved_config}
                     logger.debug("Loaded config from %s", self.config_path)
                     return merged
             except json.JSONDecodeError as e:
                 logger.warning("Invalid config file, using defaults: %s", e)
-                return self.DEFAULT_CONFIG.copy()
+                return self._default_config()
             except Exception as e:
                 logger.warning("Failed to load config, using defaults: %s", e)
-                return self.DEFAULT_CONFIG.copy()
+                return self._default_config()
         
         logger.debug("No config file found, using defaults")
-        return self.DEFAULT_CONFIG.copy()
+        return self._default_config()
     
     def save(self) -> bool:
         """
@@ -164,9 +170,9 @@ class ConfigManager:
             key: Specific key to reset. If None, resets all settings.
         """
         if key is None:
-            self.config = self.DEFAULT_CONFIG.copy()
+            self.config = self._default_config()
         elif key in self.DEFAULT_CONFIG:
-            self.config[key] = self.DEFAULT_CONFIG[key]
+            self.config[key] = deepcopy(self.DEFAULT_CONFIG[key])
         self.save()
     
     def add_recent_file(self, file_path: str) -> None:
@@ -176,7 +182,7 @@ class ConfigManager:
         Args:
             file_path: Path to add to recent files
         """
-        recent: List[str] = self.config.get("recent_files", [])
+        recent: List[str] = list(self.config.get("recent_files", []))
         max_recent = self.config.get("max_recent_files", 10)
         
         # Remove if already exists (to move to top)
@@ -197,7 +203,7 @@ class ConfigManager:
         Returns:
             List of recent file paths
         """
-        return self.config.get("recent_files", [])
+        return list(self.config.get("recent_files", []))
     
     def clear_recent_files(self) -> None:
         """Clear recent files list."""
@@ -211,7 +217,7 @@ class ConfigManager:
         Returns:
             Copy of configuration dictionary
         """
-        return self.config.copy()
+        return deepcopy(self.config)
     
     def __repr__(self) -> str:
         return f"ConfigManager(path={self.config_path})"

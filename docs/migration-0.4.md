@@ -68,6 +68,31 @@ The early-alpha aliases `compression_ratio`, `filename`, and `safe_path` remain
 for compatibility. New consumers should not build new logic around those
 aliases.
 
+### Typed Operation Results
+
+The core operations continue to return ordinary dictionaries, but their stable
+keys are exported as `TypedDict` contracts for editors and type checkers:
+
+```python
+from Pagonic import ArchiveInfo, ExtractionResult
+
+archive: ArchiveInfo = reader.get_archive_info()
+extracted: ExtractionResult = reader.extract_all("output")
+```
+
+`ZipWriter.finalize()` returns `CompressionStats`, and
+`ZipReader.get_file_info()` returns `FileInfo | None`. These annotations make
+the existing compatibility surface explicit without introducing a breaking
+runtime wrapper.
+
+### Configuration State
+
+`ConfigManager` remains compatible with the current JSON configuration format.
+Its default values are now copied per instance, and `get_recent_files()` plus
+`to_dict()` return defensive copies. Callers may safely inspect or modify
+returned values without changing another manager instance or the stored
+configuration until `set()`/`save()` is used explicitly.
+
 ## Dependencies
 
 The base package is intentionally small. Inspection, verification, and safe

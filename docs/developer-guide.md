@@ -86,6 +86,22 @@ The early-alpha aliases `compression_ratio` at archive level and `filename`,
 should use `global_compression_ratio`, `original_name`, `normalized_name`, and
 `safe_name`.
 
+The reader and writer keep returning ordinary dictionaries at runtime for
+compatibility, while their stable result shapes are available as public
+`TypedDict` contracts:
+
+```python
+from Pagonic import ArchiveInfo, ExtractionResult
+
+archive: ArchiveInfo = reader.get_archive_info()
+extraction: ExtractionResult = reader.extract_all("output")
+```
+
+`ZipWriter.finalize()` returns `CompressionStats`, and
+`ZipReader.get_file_info()` returns `FileInfo | None`. These types describe
+the existing mappings; they do not add a runtime wrapper or change the JSON
+report schema.
+
 Risk flag metadata lives in `RISK_CATALOG`. Each catalog entry has an `id`,
 `title`, `severity`, `explanation`, and `recommended_action`. Keep new report
 renderers and CLI commands attached to that catalog instead of hardcoding
@@ -107,6 +123,9 @@ CLI policy defaults:
 - Keep the import package name `Pagonic` until a planned migration introduces lowercase compatibility.
 - Keep PyQt6 behind the `gui` optional dependency.
 - Keep `numpy` and the optional performance stack behind the `performance` extra; the inspector and safe-extract paths must not require it.
+- `ConfigManager` creates isolated default state. `get_recent_files()` and
+  `to_dict()` return copies, so callers cannot mutate persisted configuration
+  accidentally through a returned list or mapping.
 - Prefer focused tests for behavior changes and run the full suite before publishing changes.
 - Avoid adding claims about acceleration or automation unless the code and tests support them.
 - Keep the public product direction focused on ZIP inspection, verification, reporting, and safe extraction rather than general archive-manager competition.
