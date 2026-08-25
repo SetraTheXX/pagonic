@@ -9,7 +9,7 @@ inspection first, extraction second.
 - `Pagonic.core.formats.zip_writer.ZipWriter` writes archives and normalizes compression levels.
 - `Pagonic.core.formats.zip_reader.ZipReader` reads archive entries and extracts files.
 - `Pagonic.core.formats.inspection.inspect_archive` produces structured risk reports without extraction.
-- `Pagonic.core.formats.handlers.zip_handler.ZipHandler` is the legacy compatibility implementation used by older tests and workflows; it is not the center of new development.
+- `Pagonic.core.formats.handlers.zip_handler.ZipHandler` is a thin compatibility facade for older tests and workflows; it is not the center of new development.
 - `Pagonic.core.formats.security` validates archive safety and sanitizes archive paths.
 - `Pagonic.cli` exposes the `pagonic` command.
 - `Pagonic.gui` exposes the optional PyQt6 interface through lazy imports.
@@ -53,8 +53,7 @@ reject unsafe filenames where required, and keep ZIP bomb checks explicit.
 The import package remains `Pagonic` in this release. A future lowercase `pagonic` package rename would need a compatibility bridge and migration notes.
 
 `ZipHandler` remains available for older callers, but new code should use
-`ZipReader`, `ZipWriter`, and `inspect_archive` directly. The handler still
-contains legacy compression and performance paths, so it is intentionally kept
-outside the inspector's normal import path. Its reduction to a tested
-delegation facade is a future compatibility task, not an assumption of the
-current architecture.
+`ZipReader`, `ZipWriter`, and `inspect_archive` directly. The handler now
+delegates archive creation and extraction to the public reader/writer APIs and
+keeps only compatibility metadata, result shaping, and small legacy wrappers.
+It is intentionally kept outside the inspector's normal import path.

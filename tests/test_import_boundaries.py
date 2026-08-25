@@ -68,6 +68,23 @@ def test_import_zip_reader_does_not_load_optional_performance_chain():
     assert not LEGACY_IMPORTS.intersection(loaded)
 
 
+def test_import_legacy_handler_does_not_load_performance_dependencies():
+    loaded = _run_import_probe(
+        "import sys; from Pagonic import ZipHandler; ZipHandler(); "
+        "print('\\n'.join(sorted(sys.modules)))"
+    )
+
+    optional_performance_imports = {
+        "numpy",
+        "psutil",
+        "Pagonic.core.formats.compression_utils",
+        "Pagonic.core.formats.simd_memory",
+        "Pagonic.core.formats.hybrid_decompressor",
+        "Pagonic.core.formats.optimized_decompressor",
+    }
+    assert not optional_performance_imports.intersection(loaded)
+
+
 def test_legacy_exports_remain_lazy_compatible():
     from Pagonic import ZipHandler
     from Pagonic.core.formats import FormatRegistry

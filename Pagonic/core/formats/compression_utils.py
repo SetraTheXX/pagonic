@@ -11,11 +11,23 @@ import logging
 import zlib
 from typing import Optional, Dict, Any, Tuple
 
-try:
-    import psutil
-    PSUTIL_AVAILABLE = True
-except ImportError:
-    PSUTIL_AVAILABLE = False
+psutil = None
+PSUTIL_AVAILABLE = None
+
+
+def _get_psutil():
+    """Load psutil only when a caller requests adaptive memory information."""
+    global psutil, PSUTIL_AVAILABLE
+    if PSUTIL_AVAILABLE is None:
+        try:
+            import psutil as psutil_module
+        except ImportError:
+            psutil = None
+            PSUTIL_AVAILABLE = False
+        else:
+            psutil = psutil_module
+            PSUTIL_AVAILABLE = True
+    return psutil
 
 from .constants import ZipConstants, MemoryThresholds
 from .simd_crc32 import fast_crc32
@@ -77,11 +89,11 @@ def get_available_memory_gb() -> float:
     Returns:
         float: Available memory in GB
     """
-    if PSUTIL_AVAILABLE:
-        return psutil.virtual_memory().available / (1024 ** 3)
-    else:
-        # Fallback: Assume 8GB available
-        return 8.0
+    psutil_module = _get_psutil()
+    if psutil_module is not None:
+        return psutil_module.virtual_memory().available / (1024 ** 3)
+    # Fallback: Assume 8GB available
+    return 8.0
 
 
 def get_total_memory_gb() -> float:
@@ -91,11 +103,11 @@ def get_total_memory_gb() -> float:
     Returns:
         float: Total memory in GB
     """
-    if PSUTIL_AVAILABLE:
-        return psutil.virtual_memory().total / (1024 ** 3)
-    else:
-        # Fallback: Assume 16GB total
-        return 16.0
+    psutil_module = _get_psutil()
+    if psutil_module is not None:
+        return psutil_module.virtual_memory().total / (1024 ** 3)
+    # Fallback: Assume 16GB total
+    return 16.0
 
 
 def select_chunk_size(ram_gb: float = None) -> int:
