@@ -17,9 +17,9 @@ universal benchmark superiority, or runtime AI features.
 
 ## Current Baseline
 
-### 0.3.0 Alpha - Available
+### 0.4.0 Alpha - Available
 
-The current baseline includes:
+The current release baseline includes:
 
 - `pagonic inspect` with terminal, JSON, and Markdown reports.
 - `pagonic verify` with a configurable maximum risk level.
@@ -29,21 +29,15 @@ The current baseline includes:
 - `ZipReader`, `ZipWriter`, and `inspect_archive` as the preferred Python APIs.
 - `ZipHandler` as a compatibility facade for older callers.
 - Windows/Linux CI coverage for Python 3.10 through 3.13.
-
-The current package version remains `0.3.0` until a separate release decision is
-made. Roadmap work alone does not bump the version, create a tag, or publish a
-package.
-
-### 0.4 API Polish - Foundation Completed
-
-The main branch now has the 0.4 API polish foundation:
-
 - Stable typed contracts for core result mappings.
 - Defensive configuration state handling.
 - Migration notes for the focused reader/writer/inspection APIs.
 - Compatibility boundaries and public claim rules documented.
+- Public contribution, security reporting, and issue-template surfaces.
+- A directly runnable inspect-first example.
 
-The next product milestone is 0.5, not a blind version bump.
+The previous `0.3.0` release established the initial cleaned-up alpha surface.
+The current package version is `0.4.0`; the next planned milestone is 0.5.
 
 ## 0.5 Proposed Milestone
 

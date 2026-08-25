@@ -1,8 +1,8 @@
 # Pagonic 0.4 Migration Notes
 
-This document describes the intended migration path from the current 0.3.0
-alpha surface toward the 0.4 API direction. It is guidance for development;
-it does not publish a package or change the current version.
+This document describes the migration from the 0.3.0 alpha surface to the
+0.4.0 API direction. The migration is now part of the current GitHub release;
+the notes remain useful for callers moving from the older compatibility surface.
 
 ## Product Flow
 
@@ -114,7 +114,7 @@ are not required for the security-aware inspection workflow.
 
 ## Validation Checklist
 
-Before treating a 0.4 candidate as ready, run:
+The 0.4.0 release gate included:
 
 ```bash
 python -m pytest -q

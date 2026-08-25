@@ -5,9 +5,23 @@ changes; future work belongs in [the roadmap](docs/roadmap.md).
 
 ## Unreleased
 
-- Added public contribution, security reporting, and review guidance.
-- Added issue and pull request templates for focused contributions.
-- Added the 0.5 roadmap and explicit product boundaries.
+No unreleased changes.
+
+## 0.4.0 - API polish and public surface
+
+- Stabilized typed result contracts for archive, compression, extraction, and
+  file information mappings.
+- Added defensive configuration state handling so returned values cannot mutate
+  another manager instance or persisted state implicitly.
+- Isolated the historical `ZipHandler` behind the focused `ZipReader` and
+  `ZipWriter` APIs while preserving compatibility for existing callers.
+- Documented the 0.3 to 0.4 migration path and the stable inspection report
+  fields.
+- Kept inspection, verification, and safe extraction behavior covered by the
+  Windows/Linux CI matrix and clean wheel smoke tests.
+- Added a directly runnable inspect-first example and a regression test for it.
+- Added public contribution, security reporting, review guidance, issue
+  templates, and the 0.5 roadmap.
 
 ## 0.3.0 - Alpha baseline
 

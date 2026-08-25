@@ -71,7 +71,9 @@ class TestVersionCommand:
         result = runner.invoke(cli, ['--version'])
         assert result.exit_code == 0
         assert 'Pagonic' in result.output
-        assert '0.3.0' in result.output
+        from Pagonic import __version__
+
+        assert __version__ in result.output
 
 
 class TestHelpCommand:
