@@ -105,10 +105,12 @@ pyproject.toml    package metadata and tool config
 
 ## Documentation
 
-* [Architecture](docs/architecture.md)
-* [User Guide](docs/user-guide.md)
-* [Developer Guide](docs/developer-guide.md)
-* [Roadmap](docs/roadmap.md)
+- [Architecture](docs/architecture.md)
+- [User Guide](docs/user-guide.md)
+- [Developer Guide](docs/developer-guide.md)
+- [0.4 Migration Notes](docs/migration-0.4.md)
+- [Roadmap](docs/roadmap.md)
+- [Changelog](CHANGELOG.md)
 
 ## Risk Signals
 

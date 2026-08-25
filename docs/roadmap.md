@@ -2,28 +2,34 @@
 
 This roadmap replaces the older local phase plans. The old plans were useful for history, but they mixed experiments, stale dates, and future ideas that should not be part of the public repository.
 
-## 0.3.x Stabilization
+## 0.3.x Stabilization - Completed
 
-- Keep the public tree clean and CI-backed.
-- Keep `inspect`, `verify`, and `safe-extract` as the main CLI value path.
-- Tighten CLI behavior and error messages around invalid and risky archives.
-- Add focused GUI smoke coverage without requiring PyQt6 for CLI-only users.
-- Refresh architecture and user docs as APIs settle.
-- Keep the test suite green on Windows and Linux.
+- The public tree is clean and CI-backed.
+- `inspect`, `verify`, and `safe-extract` are the main CLI value path.
+- Invalid and risky archive behavior has explicit CLI policies and tests.
+- GUI import smoke coverage does not require PyQt6 for CLI-only users.
+- Architecture and user documentation describe the inspection-first flow.
+- The supported CI matrix covers Windows/Linux and Python 3.10-3.13.
+- Wheel installation, CLI smoke, coverage, and `pip check` run in CI.
 
 ## 0.4.x API Polish
 
-- Review `ZipWriter`, `ZipReader`, `inspect_archive`, and `ZipHandler` for a smaller stable public surface.
-- Remove or quarantine internal experimental helpers that are not part of the API.
-- Improve typed return values for archive metadata and operation results.
-- Clarify config file behavior and CLI defaults.
-- Document risk flag meanings and report formats.
+- Completed foundation: `ZipReader`, `ZipWriter`, and `inspect_archive` are the
+  preferred APIs; `ZipHandler` is a thin compatibility facade.
+- Completed foundation: legacy performance dependencies are outside the base
+  runtime dependency set.
+- Next: review typed return values for archive metadata and operation results.
+- Next: clarify config file behavior and CLI defaults.
+- Next: decide whether and when to deprecate the compatibility facade in a
+  breaking release.
+- Keep risk flag meanings and report formats tied to the catalog and schema.
 
-## 0.5.x Packaging and Release Prep
+## 0.4.x Release Gate
 
-- Add release automation only after the package metadata is stable.
-- Validate editable install, wheel build, and CLI entry points in CI.
-- Publish release notes with tested features and known limitations.
+- Complete the migration review documented in `docs/migration-0.4.md`.
+- Re-run the full local validation and review the CI matrix before a 0.4
+  version decision.
+- Do not publish or change the package version as part of roadmap work alone.
 
 ## Later Work
 
