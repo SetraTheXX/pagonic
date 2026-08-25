@@ -20,7 +20,10 @@ After many iterations, I revised the project direction and narrowed the public s
 > Pagonic is not trying to be another desktop archive manager.
 > It is becoming a security-aware ZIP inspection and safe extraction toolkit.
 
-This `v0.3.0` release is the first cleaned-up public version of that new direction. It keeps the useful ZIP core, CLI, tests, and safety work, while moving the product message toward inspecting archives before extraction, reporting risk signals, and supporting safer automation workflows.
+This `v0.4.0` release builds on the first cleaned-up public direction. It keeps
+the useful ZIP core, CLI, tests, and safety work while making the focused reader,
+writer, inspection, and contribution surfaces clearer for the next stage of
+development.
 
 Pagonic is still evolving, but its purpose is now clearer: inspect first, extract safely.
 
@@ -171,7 +174,7 @@ commands and do not replace an inspection report.
 
 ## Status
 
-The current public release is `0.3.0`: an alpha-stage, test-backed release with
+The current public release is `0.4.0`: an alpha-stage, test-backed release with
 security-aware ZIP inspection, gated safe extraction, core ZIP behavior, CLI
 support, optional GUI packaging, MIT license, and CI-ready tests.
 
