@@ -190,7 +190,7 @@ def extract(archive: str, output: str, verbose: bool):
     try:
         # Create reader
         reader = ZipReader(archive)
-        entries = reader._get_entries()  # Use internal method
+        entries = reader.get_entries()
         total_files = len(entries)
         
         console.print(f"[dim]Found {total_files} files in archive[/]\n")
@@ -368,6 +368,7 @@ def _inspection_report_markdown(report) -> str:
         "| Field | Value |",
         "| --- | --- |",
         f"| Archive | `{_markdown_cell(report.archive_path)}` |",
+        f"| Schema version | `{report.schema_version}` |",
         f"| Overall risk level | `{report.risk_level}` |",
         f"| Recommended action | {_markdown_cell(report.recommended_action)} |",
         f"| Files | {report.file_count} |",
@@ -564,7 +565,7 @@ def list_contents(archive: str, long: bool, tree_output: bool):
     try:
         # Create reader
         reader = ZipReader(archive)
-        entries = reader._get_entries()  # Use internal method
+        entries = reader.get_entries()
 
         if tree_output:
             tree = Tree(f"[bold cyan]{Path(archive).name}[/]")
@@ -657,7 +658,7 @@ def info(archive: str):
     try:
         # Create reader
         reader = ZipReader(archive)
-        entries = reader._get_entries()  # Use internal method
+        entries = reader.get_entries()
         
         # Calculate stats
         total_uncompressed = sum(e.uncompressed_size for e in entries)

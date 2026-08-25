@@ -61,7 +61,7 @@ class ExtractionWorker(QThread):
             from Pagonic.core.formats.zip_reader import ZipReader
             
             reader = ZipReader(self.archive_path)
-            entries = reader._get_entries()
+            entries = reader.get_entries()
             total = len(entries)
             
             def on_progress(current: int, total_count: int, filename: str):
@@ -287,7 +287,7 @@ class ArchiveWindow(QMainWindow):
             from Pagonic.core.formats.zip_reader import ZipReader
             
             reader = ZipReader(self.archive_path)
-            entries = reader._get_entries()
+            entries = reader.get_entries()
             
             self.entries = []
             self.table.setRowCount(len(entries))

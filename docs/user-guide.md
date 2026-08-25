@@ -47,6 +47,7 @@ shape includes:
 
 ```json
 {
+  "schema_version": "1",
   "archive_path": "archive.zip",
   "file_count": 1,
   "total_compressed_size": 120,
@@ -76,8 +77,10 @@ shape includes:
 }
 ```
 
-The exact numeric values depend on the archive. The field names above are the
-stable alpha surface for report consumers. `pagonic inspect --markdown` renders
+The exact numeric values depend on the archive. `schema_version` identifies the
+serialized report contract. The canonical field names above are the stable
+alpha surface for report consumers; the legacy `compression_ratio`, `filename`,
+and `safe_path` aliases remain for compatibility. `pagonic inspect --markdown` renders
 the same report as a saved Markdown document with an archive summary, risk flag
 table, entry table, and warnings/errors sections.
 
@@ -106,6 +109,15 @@ table, entry table, and warnings/errors sections.
 | `unsupported_compression_method` | `medium` |
 | `crc_or_structure_error` | `critical` |
 | `suspicious_extension` | `medium` |
+| `duplicate_filename` | `high` |
+| `normalized_path_collision` | `high` |
+| `case_insensitive_collision` | `high` |
+| `unicode_normalization_collision` | `high` |
+| `symlink_entry` | `high` |
+| `encrypted_entry` | `high` |
+| `nested_archive` | `low` |
+| `long_filename` | `medium` |
+| `long_archive_comment` | `low` |
 
 Compress files:
 

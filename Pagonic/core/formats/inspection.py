@@ -10,6 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
+import stat
+import unicodedata
+import zlib
 import zipfile
 
 try:
@@ -18,6 +21,39 @@ try:
 except ImportError:
     from Pagonic.core.formats.security import ZipConstants
     from Pagonic.core.formats.zip_structs import CompressionMethods
+
+
+INSPECTION_SCHEMA_VERSION = "1"
+ARCHIVE_REPORT_FIELDS = (
+    "schema_version",
+    "archive_path",
+    "file_count",
+    "total_compressed_size",
+    "total_uncompressed_size",
+    "global_compression_ratio",
+    "risk_level",
+    "risk_flags",
+    "warnings",
+    "errors",
+    "recommended_action",
+    "entries",
+    # Compatibility alias retained for the early alpha report shape.
+    "compression_ratio",
+)
+ARCHIVE_ENTRY_FIELDS = (
+    "original_name",
+    "normalized_name",
+    "safe_name",
+    "compressed_size",
+    "uncompressed_size",
+    "compression_method",
+    "crc32",
+    "compression_ratio",
+    "risk_flags",
+    # Compatibility aliases retained for the early alpha report shape.
+    "filename",
+    "safe_path",
+)
 
 
 class ArchiveRisk:
@@ -34,6 +70,15 @@ class ArchiveRisk:
     UNSUPPORTED_COMPRESSION_METHOD = "unsupported_compression_method"
     CRC_OR_STRUCTURE_ERROR = "crc_or_structure_error"
     SUSPICIOUS_EXTENSION = "suspicious_extension"
+    DUPLICATE_FILENAME = "duplicate_filename"
+    NORMALIZED_PATH_COLLISION = "normalized_path_collision"
+    CASE_INSENSITIVE_COLLISION = "case_insensitive_collision"
+    UNICODE_NORMALIZATION_COLLISION = "unicode_normalization_collision"
+    SYMLINK_ENTRY = "symlink_entry"
+    ENCRYPTED_ENTRY = "encrypted_entry"
+    NESTED_ARCHIVE = "nested_archive"
+    LONG_FILENAME = "long_filename"
+    LONG_ARCHIVE_COMMENT = "long_archive_comment"
 
 
 @dataclass(frozen=True)
@@ -134,6 +179,69 @@ RISK_CATALOG: Dict[str, RiskDefinition] = {
         explanation="The entry has an extension commonly associated with executable or script content.",
         recommended_action="Review the file before execution or deployment. Do not treat it as harmless data.",
     ),
+    ArchiveRisk.DUPLICATE_FILENAME: RiskDefinition(
+        id=ArchiveRisk.DUPLICATE_FILENAME,
+        title="Duplicate archive filename",
+        severity="high",
+        explanation="The archive contains the same filename more than once, so extraction order could change the resulting file.",
+        recommended_action="Reject automatic extraction until the duplicate entries are reviewed and the intended file is known.",
+    ),
+    ArchiveRisk.NORMALIZED_PATH_COLLISION: RiskDefinition(
+        id=ArchiveRisk.NORMALIZED_PATH_COLLISION,
+        title="Normalized path collision",
+        severity="high",
+        explanation="Different archive names resolve to the same sanitized extraction path.",
+        recommended_action="Do not extract automatically. Remove the ambiguity or inspect the archive in an isolated location.",
+    ),
+    ArchiveRisk.CASE_INSENSITIVE_COLLISION: RiskDefinition(
+        id=ArchiveRisk.CASE_INSENSITIVE_COLLISION,
+        title="Case-insensitive path collision",
+        severity="high",
+        explanation="Different names collide on common case-insensitive filesystems such as default Windows volumes.",
+        recommended_action="Review the colliding entries before extraction and avoid relying on extraction order.",
+    ),
+    ArchiveRisk.UNICODE_NORMALIZATION_COLLISION: RiskDefinition(
+        id=ArchiveRisk.UNICODE_NORMALIZATION_COLLISION,
+        title="Unicode normalization collision",
+        severity="high",
+        explanation="Different Unicode spellings normalize to the same path on filesystems that canonicalize Unicode names.",
+        recommended_action="Review the colliding Unicode names before extraction or deployment.",
+    ),
+    ArchiveRisk.SYMLINK_ENTRY: RiskDefinition(
+        id=ArchiveRisk.SYMLINK_ENTRY,
+        title="Symbolic-link entry",
+        severity="high",
+        explanation="The ZIP metadata marks this entry as a symbolic link rather than a regular file.",
+        recommended_action="Reject automatic extraction unless the link metadata is explicitly trusted and handled safely.",
+    ),
+    ArchiveRisk.ENCRYPTED_ENTRY: RiskDefinition(
+        id=ArchiveRisk.ENCRYPTED_ENTRY,
+        title="Encrypted entry",
+        severity="high",
+        explanation="The entry is encrypted, so its contents cannot be fully validated or extracted by the current workflow.",
+        recommended_action="Do not automate extraction. Use a trusted password-aware workflow and validate the contents separately.",
+    ),
+    ArchiveRisk.NESTED_ARCHIVE: RiskDefinition(
+        id=ArchiveRisk.NESTED_ARCHIVE,
+        title="Nested archive",
+        severity="low",
+        explanation="The entry appears to be another archive based on its filename extension.",
+        recommended_action="Review nested archives separately; inspection does not recursively analyze their contents.",
+    ),
+    ArchiveRisk.LONG_FILENAME: RiskDefinition(
+        id=ArchiveRisk.LONG_FILENAME,
+        title="Long filename",
+        severity="medium",
+        explanation="The entry name exceeds the configured review length and may be rejected or truncated by a target filesystem.",
+        recommended_action="Review the name and target filesystem limits before extraction.",
+    ),
+    ArchiveRisk.LONG_ARCHIVE_COMMENT: RiskDefinition(
+        id=ArchiveRisk.LONG_ARCHIVE_COMMENT,
+        title="Long archive comment",
+        severity="low",
+        explanation="The archive comment is unusually large and is included as a review signal, not as executable content analysis.",
+        recommended_action="Review the archive metadata if the file came from an untrusted source.",
+    ),
 }
 
 
@@ -142,6 +250,21 @@ _RISK_CATALOG_ORDER = {risk_id: index for index, risk_id in enumerate(RISK_CATAL
 
 _RISK_ORDER = {"ok": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 _SUSPICIOUS_EXTENSIONS = {".bat", ".cmd", ".com", ".dll", ".exe", ".js", ".msi", ".ps1", ".scr", ".vbs"}
+_NESTED_ARCHIVE_EXTENSIONS = {
+    ".7z",
+    ".apk",
+    ".bz2",
+    ".cab",
+    ".gz",
+    ".jar",
+    ".iso",
+    ".rar",
+    ".tar",
+    ".tgz",
+    ".whl",
+    ".xz",
+    ".zip",
+}
 
 
 @dataclass
@@ -163,6 +286,11 @@ class ArchiveEntryReport:
         return self.original_name
 
     @property
+    def normalized_name(self) -> str:
+        """Return the canonical normalized extraction name."""
+        return self.safe_name
+
+    @property
     def safe_path(self) -> str:
         """Backward-compatible alias for older callers."""
         return self.safe_name
@@ -171,7 +299,7 @@ class ArchiveEntryReport:
         """Return the stable JSON-compatible report shape for this entry."""
         return {
             "original_name": self.original_name,
-            "normalized_name": self.safe_name,
+            "normalized_name": self.normalized_name,
             "safe_name": self.safe_name,
             "compressed_size": self.compressed_size,
             "uncompressed_size": self.uncompressed_size,
@@ -202,6 +330,11 @@ class ArchiveInspectionReport:
     entries: List[ArchiveEntryReport] = field(default_factory=list)
 
     @property
+    def schema_version(self) -> str:
+        """Return the stable version of the serialized inspection contract."""
+        return INSPECTION_SCHEMA_VERSION
+
+    @property
     def compression_ratio(self) -> float:
         """Backward-compatible alias for older callers."""
         return self.global_compression_ratio
@@ -209,6 +342,7 @@ class ArchiveInspectionReport:
     def to_dict(self) -> Dict[str, Any]:
         """Return the stable JSON-compatible archive report shape."""
         return {
+            "schema_version": self.schema_version,
             "archive_path": self.archive_path,
             "file_count": self.file_count,
             "total_compressed_size": self.total_compressed_size,
@@ -239,13 +373,40 @@ def inspect_archive(zip_path: str | Path) -> ArchiveInspectionReport:
                 report_risks.append(ArchiveRisk.TOO_MANY_FILES)
                 warnings.append(f"Archive contains too many files: {len(infos)}")
 
-            bad_file = zip_file.testzip()
+            if len(zip_file.comment) > ZipConstants.MAX_ARCHIVE_COMMENT_LENGTH:
+                report_risks.append(ArchiveRisk.LONG_ARCHIVE_COMMENT)
+                warnings.append(
+                    "Archive comment exceeds the configured review limit: "
+                    f"{len(zip_file.comment)} bytes"
+                )
+
+            entries = [_inspect_entry(info) for info in infos]
+            _apply_collision_risks(entries)
+
+            encrypted_names = [
+                info.filename for info in infos if info.flag_bits & 0x1
+            ]
+            unsupported_names = [
+                info.filename
+                for info in infos
+                if not CompressionMethods.is_supported(info.compress_type)
+            ]
+            if encrypted_names:
+                warnings.append(
+                    "CRC validation skipped for encrypted entries: "
+                    + ", ".join(encrypted_names[:5])
+                )
+            if unsupported_names:
+                warnings.append(
+                    "CRC validation skipped for unsupported compression methods: "
+                    + ", ".join(unsupported_names[:5])
+                )
+
+            bad_file = _find_bad_entry(zip_file, infos)
             if bad_file:
                 report_risks.append(ArchiveRisk.CRC_OR_STRUCTURE_ERROR)
                 errors.append(f"CRC or structure error detected in '{bad_file}'")
-
-            entries = [_inspect_entry(info) for info in infos]
-    except (zipfile.BadZipFile, OSError) as exc:
+    except (zipfile.BadZipFile, OSError, EOFError, RuntimeError, ValueError) as exc:
         errors.append(f"Invalid or unreadable ZIP archive: {exc}")
         report_risks.append(ArchiveRisk.CRC_OR_STRUCTURE_ERROR)
 
@@ -282,6 +443,14 @@ def _inspect_entry(info: zipfile.ZipInfo) -> ArchiveEntryReport:
         risk_flags.append(ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD)
     if Path(_safe_basename(info.filename)).suffix.lower() in _SUSPICIOUS_EXTENSIONS:
         risk_flags.append(ArchiveRisk.SUSPICIOUS_EXTENSION)
+    if _is_symlink(info):
+        risk_flags.append(ArchiveRisk.SYMLINK_ENTRY)
+    if info.flag_bits & 0x1:
+        risk_flags.append(ArchiveRisk.ENCRYPTED_ENTRY)
+    if len(info.filename) > ZipConstants.MAX_PATH_LENGTH:
+        risk_flags.append(ArchiveRisk.LONG_FILENAME)
+    if Path(_safe_basename(info.filename)).suffix.lower() in _NESTED_ARCHIVE_EXTENSIONS:
+        risk_flags.append(ArchiveRisk.NESTED_ARCHIVE)
 
     return ArchiveEntryReport(
         original_name=info.filename,
@@ -293,6 +462,76 @@ def _inspect_entry(info: zipfile.ZipInfo) -> ArchiveEntryReport:
         compression_ratio=ratio,
         risk_flags=_dedupe(risk_flags),
     )
+
+
+def _find_bad_entry(zip_file: zipfile.ZipFile, infos: List[zipfile.ZipInfo]) -> str | None:
+    """Validate readable STORE/DEFLATE entries without touching encrypted data."""
+    for info in infos:
+        if info.flag_bits & 0x1 or not CompressionMethods.is_supported(info.compress_type):
+            continue
+        try:
+            with zip_file.open(info, "r") as entry_file:
+                while entry_file.read(1024 * 1024):
+                    pass
+        except (zipfile.BadZipFile, EOFError, OSError, RuntimeError, ValueError, zlib.error):
+            return info.filename
+    return None
+
+
+def _apply_collision_risks(entries: List[ArchiveEntryReport]) -> None:
+    """Mark entries that become ambiguous after extraction normalization."""
+    _mark_groups(
+        entries,
+        lambda entry: entry.original_name,
+        ArchiveRisk.DUPLICATE_FILENAME,
+        require_distinct_names=False,
+    )
+    _mark_groups(
+        entries,
+        lambda entry: entry.safe_name,
+        ArchiveRisk.NORMALIZED_PATH_COLLISION,
+        require_distinct_names=True,
+    )
+    _mark_groups(
+        entries,
+        lambda entry: entry.safe_name.casefold(),
+        ArchiveRisk.CASE_INSENSITIVE_COLLISION,
+        require_distinct_names=True,
+    )
+    _mark_groups(
+        entries,
+        lambda entry: unicodedata.normalize("NFC", entry.safe_name),
+        ArchiveRisk.UNICODE_NORMALIZATION_COLLISION,
+        require_distinct_names=True,
+    )
+
+
+def _mark_groups(
+    entries: List[ArchiveEntryReport],
+    key_function,
+    risk_id: str,
+    require_distinct_names: bool,
+) -> None:
+    groups: Dict[str, List[int]] = {}
+    for index, entry in enumerate(entries):
+        if entry.safe_name or risk_id == ArchiveRisk.DUPLICATE_FILENAME:
+            groups.setdefault(key_function(entry), []).append(index)
+
+    for indexes in groups.values():
+        if len(indexes) < 2:
+            continue
+        if require_distinct_names:
+            names = {entries[index].original_name for index in indexes}
+            if len(names) < 2:
+                continue
+        for index in indexes:
+            entries[index].risk_flags = _dedupe(entries[index].risk_flags + [risk_id])
+
+
+def _is_symlink(info: zipfile.ZipInfo) -> bool:
+    """Detect Unix symbolic-link metadata without following the link."""
+    unix_mode = (info.external_attr >> 16) & 0xFFFF
+    return info.create_system == 3 and stat.S_ISLNK(unix_mode)
 
 
 def _analyze_archive_path(filename: str) -> List[str]:
@@ -380,6 +619,9 @@ __all__ = [
     "ArchiveEntryReport",
     "ArchiveInspectionReport",
     "ArchiveRisk",
+    "ARCHIVE_ENTRY_FIELDS",
+    "ARCHIVE_REPORT_FIELDS",
+    "INSPECTION_SCHEMA_VERSION",
     "RiskDefinition",
     "RISK_CATALOG",
     "get_risk_definition",

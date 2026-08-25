@@ -28,6 +28,7 @@ class ZipConstants:
     # highly compressible text/repeated data. Real ZIP bombs typically
     # have ratios of 100,000:1 or higher.
     MAX_PATH_LENGTH = 256  # Maximum filename length
+    MAX_ARCHIVE_COMMENT_LENGTH = 4096  # Review unusually large archive comments
     MAX_FILES_IN_ZIP = 100000  # Maximum number of files in ZIP
 
 
@@ -227,6 +228,8 @@ def validate_zip_structure(zip_path: Path) -> bool:
         raise ValidationError(f"Invalid ZIP file format: {e}")
     except FileNotFoundError:
         raise ValidationError(f"ZIP file not found: {zip_path}")
+    except (NotImplementedError, RuntimeError) as e:
+        raise ValidationError(f"ZIP contents cannot be validated: {e}")
 
 
 def is_safe_filename(filename: str) -> bool:

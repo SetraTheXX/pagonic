@@ -10,7 +10,28 @@ from typing import List, Type, Optional, Dict
 from ..base import FormatHandler
 from ..errors import ValidationError
 
-from .zip_handler import ZipHandler, register_zip_handler
+__all__ = [
+    "ZipHandler",
+    "register_zip_handler",
+    "discover_handlers",
+    "register_handlers",
+]
+
+
+def __getattr__(name):
+    """Load the legacy ZIP handler only for compatibility callers."""
+    if name not in {"ZipHandler", "register_zip_handler"}:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    from .zip_handler import ZipHandler, register_zip_handler
+
+    exports = {
+        "ZipHandler": ZipHandler,
+        "register_zip_handler": register_zip_handler,
+    }
+    globals().update(exports)
+    return exports[name]
+
 
 def discover_handlers(custom_dir: Optional[str] = None) -> List[Type[FormatHandler]]:
     """
@@ -76,9 +97,3 @@ def register_handlers(priority_map: Optional[Dict] = None, custom_dir: Optional[
         
         # Handler'ı kaydet
         FormatHandler.register(handler_class, priority=priority)
-
-# Uygulama başladığında handler'ları otomatik kaydet
-register_handlers({
-    '7z': 90,    # 7Z ikinci öncelikli
-    'rar': 80,   # RAR üçüncü öncelikli
-})
