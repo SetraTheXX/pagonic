@@ -107,13 +107,13 @@ A 0.5 candidate should not be called ready until all of these are true:
 These are the first focused issues for the 0.5 milestone. Each should remain
 small enough to review independently.
 
-1. Define and test the 0.5 inspection policy contract.
-2. Expand the synthetic ZIP security regression corpus.
-3. Document JSON schema compatibility and deterministic ordering.
-4. Add a CI integration example for `verify --max-risk`.
-5. Audit wheel and source distribution contents for a future alpha publish.
-6. Evaluate SARIF output without changing the current report schema.
-7. Write a compatibility decision for the future `ZipHandler` deprecation.
+1. [Define and test the 0.5 inspection policy contract.](https://github.com/SetraTheXX/pagonic/issues/1)
+2. [Expand the synthetic ZIP security regression corpus.](https://github.com/SetraTheXX/pagonic/issues/2)
+3. [Document JSON schema compatibility and deterministic ordering.](https://github.com/SetraTheXX/pagonic/issues/3)
+4. [Add a CI integration example for `verify --max-risk`.](https://github.com/SetraTheXX/pagonic/issues/4)
+5. [Audit wheel and source distribution contents for a future alpha publish.](https://github.com/SetraTheXX/pagonic/issues/5)
+6. [Evaluate SARIF output without changing the current report schema.](https://github.com/SetraTheXX/pagonic/issues/6)
+7. [Write a compatibility decision for the future `ZipHandler` deprecation.](https://github.com/SetraTheXX/pagonic/issues/7)
 
 Issues that add a new archive format, redesign the GUI, rewrite the engine in a
 native language, or make universal speed claims should be discussed separately
