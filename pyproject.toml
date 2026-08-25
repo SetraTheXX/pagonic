@@ -22,8 +22,6 @@ classifiers = [
     "Topic :: System :: Archiving :: Compression",
 ]
 dependencies = [
-    "typing-extensions>=4.6.0",
-    "colorama>=0.4.6",
     "click>=8.1.7",
     "rich>=13.7.0",
     "psutil>=5.9.0",
