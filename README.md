@@ -111,6 +111,18 @@ pyproject.toml    package metadata and tool config
 - [0.4 Migration Notes](docs/migration-0.4.md)
 - [Roadmap](docs/roadmap.md)
 - [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+
+## Contributing
+
+Focused contributions are welcome, especially improvements to inspection
+determinism, security regression coverage, safe extraction policy, CI
+integration, and documentation. Read [CONTRIBUTING.md](CONTRIBUTING.md), check
+[the 0.5 roadmap](docs/roadmap.md), and use the issue templates before opening
+a pull request. Do not include private plans, local paths, secrets, generated
+archives, or benchmark output in public changes.
 
 ## Risk Signals
 
@@ -165,5 +177,6 @@ support, optional GUI packaging, MIT license, and CI-ready tests.
 
 Pagonic is not intended for production-critical automation yet and is not
 positioned as a general multi-format desktop archive manager. The next work is
-stabilization, API polish, documentation tightening, and improving the Safe ZIP
-Inspector direction.
+the proposed 0.5 milestone: stabilizing report and policy contracts, expanding
+the synthetic security regression corpus, improving CI integration examples,
+and making public contribution safer and clearer.
