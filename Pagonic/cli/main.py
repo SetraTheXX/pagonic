@@ -164,7 +164,10 @@ def compress(files: Tuple[str, ...], output: str, level: int, verbose: bool):
 @click.option('--verbose', '-v', is_flag=True, help='Verbose output')
 def extract(archive: str, output: str, verbose: bool):
     """
-     Extract files from a ZIP archive.
+     Extract files from a trusted ZIP archive.
+
+    This compatibility command uses secure path handling but does not apply
+    the inspection risk gate. Use ``pagonic safe-extract`` for untrusted ZIPs.
     
     \b
     Examples:
@@ -460,10 +463,16 @@ def verify(archive: str, max_risk: str):
         )
         raise SystemExit(0)
 
-    console.print(
-        f"[bold red]FAILED[/] {archive} has risk level [red]{report.risk_level}[/] "
-        f"above max risk [yellow]{max_risk}[/]."
-    )
+    if report.errors:
+        console.print(
+            f"[bold red]FAILED[/] {archive} has validation errors and cannot be "
+            "accepted for automation."
+        )
+    else:
+        console.print(
+            f"[bold red]FAILED[/] {archive} has risk level [red]{report.risk_level}[/] "
+            f"above max risk [yellow]{max_risk}[/]."
+        )
     console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
     risky_entries = [entry for entry in report.entries if entry.risk_flags]
     if risky_entries:
@@ -505,10 +514,16 @@ def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
     allowed = RISK_LEVEL_ORDER[report.risk_level] <= RISK_LEVEL_ORDER[allow_risk] and not report.errors
 
     if not allowed:
-        console.print(
-            f"[bold red]Refused[/] {archive} has risk level [red]{report.risk_level}[/] "
-            f"above allowed [yellow]{allow_risk}[/]."
-        )
+        if report.errors:
+            console.print(
+                f"[bold red]Refused[/] {archive} has validation errors and cannot "
+                "be extracted safely."
+            )
+        else:
+            console.print(
+                f"[bold red]Refused[/] {archive} has risk level [red]{report.risk_level}[/] "
+                f"above allowed [yellow]{allow_risk}[/]."
+            )
         console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
         raise SystemExit(1)
 
@@ -551,6 +566,9 @@ def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
 def list_contents(archive: str, long: bool, tree_output: bool):
     """
      List ZIP archive contents without extracting files.
+
+    This is a read-only listing, not a security report. Use ``pagonic inspect``
+    when you need risk flags before extraction.
     
     \b
     Examples:
@@ -646,6 +664,9 @@ def list_contents(archive: str, long: bool, tree_output: bool):
 def info(archive: str):
     """
      Show detailed information about a ZIP archive.
+
+    This compatibility command does not apply the inspection risk policy. Use
+    ``pagonic inspect`` or ``pagonic verify`` for security-aware decisions.
     
     \b
     Examples:
