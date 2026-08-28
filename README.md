@@ -5,6 +5,14 @@ secure extraction, and repeatable local benchmarking. Its main idea is simple:
 
 > Inspect before you extract.
 
+<p align="center">
+  <img src="assets/pagonic-demo.gif" alt="Pagonic inspecting a suspicious ZIP and refusing unsafe automation" width="960">
+</p>
+
+The intended workflow is visible in the demo: inspect the archive, verify it
+against an explicit risk threshold, and let `safe-extract` refuse unsafe input
+before it writes files.
+
 * A core library for inspecting, writing, reading, and validating ZIP archives.
 * A `pagonic` command-line interface for inspect, verify, safe extract, and ZIP utilities.
 * An optional PyQt6 GUI launched with `pagonic-gui`.
@@ -110,6 +118,7 @@ pyproject.toml    package metadata and tool config
 
 - [Architecture](docs/architecture.md)
 - [User Guide](docs/user-guide.md)
+- [Inspection Policy Contract](docs/inspection-policy.md)
 - [Developer Guide](docs/developer-guide.md)
 - [0.4 Migration Notes](docs/migration-0.4.md)
 - [Roadmap](docs/roadmap.md)
@@ -167,6 +176,10 @@ Use `inspect` before extraction when the archive is untrusted. For automation,
 has no validation errors. `safe-extract` applies the same inspection gate before
 writing files and supports `--dry-run`.
 
+See the [inspection policy contract](docs/inspection-policy.md) for the exact
+clean/risky/invalid decision table, defaults, unsupported-method rule, and exit
+codes.
+
 The older `extract` command remains as a compatibility command for trusted
 archives. It uses secure path handling, but it is not an inspection policy gate;
 use `safe-extract` for untrusted input. `list` and `info` are read-only display
@@ -180,6 +193,6 @@ support, optional GUI packaging, MIT license, and CI-ready tests.
 
 Pagonic is not intended for production-critical automation yet and is not
 positioned as a general multi-format desktop archive manager. The next work is
-the proposed 0.5 milestone: stabilizing report and policy contracts, expanding
-the synthetic security regression corpus, improving CI integration examples,
+the proposed 0.5 milestone: extending the now-explicit policy baseline with a
+larger synthetic security regression corpus, improving CI integration examples,
 and making public contribution safer and clearer.

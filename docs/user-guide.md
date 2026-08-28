@@ -47,6 +47,9 @@ Use `inspect` before extraction when the archive is untrusted. For automation,
 has no validation errors. `safe-extract` applies the same inspection gate before
 writing files and supports `--dry-run`.
 
+See the [inspection policy contract](inspection-policy.md) for the complete
+clean/risky/invalid decision table and command exit-code behavior.
+
 The older `extract` command remains as a compatibility command for trusted
 archives. It uses secure path handling, but it is not an inspection policy gate;
 use `safe-extract` for untrusted input. `list` and `info` are read-only display

@@ -36,6 +36,10 @@ The CLI `safe-extract` command applies this gate automatically. It refuses
 `high` or `critical` risk archives by default and refuses unsupported ZIP
 compression methods before extraction.
 
+The shared threshold and validation precedence is defined in the
+[inspection policy contract](inspection-policy.md) and implemented by
+`Pagonic.cli.policy`.
+
 ## Inspection Flow
 
 1. `inspect_archive()` reads ZIP metadata without extracting files.

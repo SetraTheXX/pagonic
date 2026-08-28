@@ -16,10 +16,15 @@ from rich import box
 
 from Pagonic import __version__
 from Pagonic.cli.utils import format_size, format_time, format_ratio
+from Pagonic.cli.policy import (
+    InspectionPolicy,
+    RISK_LEVEL_ORDER,
+    evaluate_safe_extraction,
+    evaluate_verification,
+)
 
 console = Console()
 VERSION = __version__
-RISK_LEVEL_ORDER = {'ok': 0, 'low': 1, 'medium': 2, 'high': 3, 'critical': 4}
 
 
 @click.group()
@@ -440,7 +445,7 @@ def _markdown_cell(value: str) -> str:
 @click.argument('archive', type=click.Path(exists=True))
 @click.option(
     '--max-risk',
-    type=click.Choice(['ok', 'low', 'medium', 'high', 'critical']),
+    type=click.Choice(tuple(RISK_LEVEL_ORDER)),
     default='low',
     show_default=True,
     help='Highest risk level that exits 0; higher risk or validation errors exit 1',
@@ -455,15 +460,18 @@ def verify(archive: str, max_risk: str):
     from Pagonic.core.formats.inspection import inspect_archive
 
     report = inspect_archive(archive)
-    acceptable = RISK_LEVEL_ORDER[report.risk_level] <= RISK_LEVEL_ORDER[max_risk] and not report.errors
-    if acceptable:
+    decision = evaluate_verification(
+        report,
+        InspectionPolicy(verify_max_risk=max_risk),
+    )
+    if decision.allowed:
         console.print(
             f"[bold green]OK[/] {archive} passed verification with risk level "
             f"[green]{report.risk_level}[/] under max risk [green]{max_risk}[/]."
         )
-        raise SystemExit(0)
+        raise SystemExit(decision.exit_code)
 
-    if report.errors:
+    if decision.reason == "validation_errors":
         console.print(
             f"[bold red]FAILED[/] {archive} has validation errors and cannot be "
             "accepted for automation."
@@ -486,7 +494,7 @@ def verify(archive: str, max_risk: str):
         console.print(f"[yellow]Warning:[/] {warning}")
     for error in report.errors:
         console.print(f"[red]Error:[/] {error}")
-    raise SystemExit(1)
+    raise SystemExit(decision.exit_code)
 
 
 @cli.command('safe-extract')
@@ -494,7 +502,7 @@ def verify(archive: str, max_risk: str):
 @click.argument('output', type=click.Path())
 @click.option(
     '--allow-risk',
-    type=click.Choice(['ok', 'low', 'medium', 'high', 'critical']),
+    type=click.Choice(tuple(RISK_LEVEL_ORDER)),
     default='medium',
     show_default=True,
     help='Highest inspection risk allowed before writing files',
@@ -507,42 +515,44 @@ def safe_extract(archive: str, output: str, allow_risk: str, dry_run: bool):
     Refuses archives above --allow-risk, archives with validation errors, and
     unsupported compression methods. Use --dry-run to preview the decision.
     """
-    from Pagonic.core.formats.inspection import ArchiveRisk, inspect_archive
+    from Pagonic.core.formats.inspection import inspect_archive
     from Pagonic.core.formats.zip_reader import ZipReader
 
     report = inspect_archive(archive)
-    allowed = RISK_LEVEL_ORDER[report.risk_level] <= RISK_LEVEL_ORDER[allow_risk] and not report.errors
+    decision = evaluate_safe_extraction(
+        report,
+        InspectionPolicy(safe_extract_allow_risk=allow_risk),
+    )
 
-    if not allowed:
-        if report.errors:
+    if not decision.allowed:
+        if decision.reason == "validation_errors":
             console.print(
                 f"[bold red]Refused[/] {archive} has validation errors and cannot "
                 "be extracted safely."
             )
+        elif decision.reason == "unsupported_compression_method":
+            console.print(
+                f"[bold red]Refused[/] {archive} contains [red]unsupported_compression_method[/] "
+                "entries. Pagonic can inspect this archive, but safe-extract only "
+                "writes methods it supports."
+            )
+            console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
         else:
             console.print(
                 f"[bold red]Refused[/] {archive} has risk level [red]{report.risk_level}[/] "
                 f"above allowed [yellow]{allow_risk}[/]."
             )
-        console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
-        raise SystemExit(1)
-
-    if ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD in report.risk_flags:
-        console.print(
-            f"[bold red]Refused[/] {archive} contains [red]unsupported_compression_method[/] "
-            "entries. Pagonic can inspect this archive, but safe-extract only "
-            "writes methods it supports."
-        )
-        console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
-        console.print("[dim]Exit code:[/] 1; no files were written.")
-        raise SystemExit(1)
+        if decision.reason != "unsupported_compression_method":
+            console.print(f"[dim]Recommended action:[/] {report.recommended_action}")
+        console.print(f"[dim]Exit code:[/] {decision.exit_code}; no files were written.")
+        raise SystemExit(decision.exit_code)
 
     if dry_run:
         console.print(
             f"[bold green]Dry run OK[/] {archive} would be extracted to [cyan]{output}[/] "
             f"with inspection risk [green]{report.risk_level}[/]."
         )
-        raise SystemExit(0)
+        raise SystemExit(decision.exit_code)
 
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)
