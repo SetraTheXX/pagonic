@@ -118,6 +118,11 @@ CLI policy defaults:
   extraction, even when the selected risk threshold would otherwise allow
   `medium`, because unsupported methods cannot be extracted safely by Pagonic.
 
+The complete decision table, command boundaries, and exit-code contract live in
+the [inspection policy contract](inspection-policy.md). Keep policy tests and
+CLI behavior synchronized with that document when changing thresholds or
+validation handling.
+
 ## Development Notes
 
 - Keep the import package name `Pagonic` until a planned migration introduces lowercase compatibility.

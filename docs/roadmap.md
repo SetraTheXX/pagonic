@@ -35,6 +35,9 @@ The current release baseline includes:
 - Compatibility boundaries and public claim rules documented.
 - Public contribution, security reporting, and issue-template surfaces.
 - A directly runnable inspect-first example.
+- An explicit automation-facing inspection policy baseline with documented
+  thresholds, validation precedence, unsupported-method handling, and exit
+  codes.
 
 The previous `0.3.0` release established the initial cleaned-up alpha surface.
 The current package version is `0.4.0`; the next planned milestone is 0.5.
@@ -54,6 +57,12 @@ surfaces without expanding Pagonic into a general archive manager.
 - Make policy decisions and exit-code behavior explicit for CI users.
 - Review configurable resource limits without weakening secure defaults.
 - Keep typed Python result contracts synchronized with runtime mappings.
+
+The policy and exit-code baseline is now implemented in `Pagonic.cli.policy`,
+covered by focused CLI and policy tests, and documented in the [inspection
+policy contract](inspection-policy.md). The remaining 0.5 work in this stream
+is report/schema determinism, resource-limit review, and broader regression
+coverage.
 
 ### Workstream B: Security Regression Corpus
 

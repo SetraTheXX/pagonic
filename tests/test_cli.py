@@ -439,6 +439,16 @@ class TestInspectCommand:
             assert result.exit_code == 1
             assert 'Use only one output format' in result.output
 
+    def test_inspect_reports_invalid_archive_without_policy_failure(self, runner):
+        with runner.isolated_filesystem():
+            Path('broken.zip').write_bytes(b'not a ZIP archive')
+
+            result = runner.invoke(cli, ['inspect', 'broken.zip'])
+
+            assert result.exit_code == 0
+            assert 'CRITICAL' in result.output
+            assert 'crc_or_structure_error' in result.output
+
 
 class TestVerifyCommand:
     """Tests for verify command."""
@@ -522,6 +532,17 @@ class TestSafeExtractCommand:
             assert 'Extracted' in result.output
             assert Path('out/safe.txt').exists()
 
+    def test_safe_extract_allows_medium_risk_by_default(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('suspicious.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('payload.exe', 'MZ')
+
+            result = runner.invoke(cli, ['safe-extract', 'suspicious.zip', 'out'])
+
+            assert result.exit_code == 0
+            assert 'Extracted' in result.output
+            assert Path('out/payload.exe').exists()
+
     def test_safe_extract_refuses_high_risk_by_default(self, runner):
         with runner.isolated_filesystem():
             with zipfile.ZipFile('risky.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -531,6 +552,7 @@ class TestSafeExtractCommand:
 
             assert result.exit_code == 1
             assert 'Refused' in result.output
+            assert 'no files were written' in result.output
             assert not Path('out/evil.txt').exists()
 
     def test_safe_extract_override_keeps_output_inside_target(self, runner):
@@ -582,6 +604,7 @@ class TestSafeExtractCommand:
             assert result.exit_code == 1
             assert 'validation errors' in _compact_output(result.output)
             assert 'above allowed' not in _compact_output(result.output)
+            assert 'no files were written' in result.output
             assert not Path('out').exists()
 
 
