@@ -86,6 +86,11 @@ The early-alpha aliases `compression_ratio` at archive level and `filename`,
 should use `global_compression_ratio`, `original_name`, `normalized_name`, and
 `safe_name`.
 
+The complete schema versioning, alias migration, array ordering, and report
+example contract is documented in the [Inspection JSON Schema Contract](inspection-schema.md).
+Keep changes to serialized fields and ordering synchronized with that document
+and its schema regression tests.
+
 The reader and writer keep returning ordinary dictionaries at runtime for
 compatibility, while their stable result shapes are available as public
 `TypedDict` contracts:

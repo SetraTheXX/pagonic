@@ -119,6 +119,7 @@ pyproject.toml    package metadata and tool config
 - [Architecture](docs/architecture.md)
 - [User Guide](docs/user-guide.md)
 - [Inspection Policy Contract](docs/inspection-policy.md)
+- [Inspection JSON Schema Contract](docs/inspection-schema.md)
 - [Developer Guide](docs/developer-guide.md)
 - [0.4 Migration Notes](docs/migration-0.4.md)
 - [Roadmap](docs/roadmap.md)
@@ -166,8 +167,11 @@ flags include:
 
 `pagonic inspect --json` emits a stable alpha report with archive totals,
 overall `risk_level`, top-level `risk_flags`, `recommended_action`, and per-entry
-metadata. `pagonic inspect --markdown` renders the same inspection as a saved
-human-readable report.
+metadata. Entries preserve archive order and risk flags use a deterministic
+catalog order. See the [Inspection JSON Schema Contract](docs/inspection-schema.md)
+for canonical fields, compatibility aliases, ordering guarantees, and clean,
+risky, and invalid report examples. `pagonic inspect --markdown` renders the
+same inspection as a saved human-readable report.
 
 ## Command Policy
 

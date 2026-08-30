@@ -95,9 +95,12 @@ shape includes:
 The exact numeric values depend on the archive. `schema_version` identifies the
 serialized report contract. The canonical field names above are the stable
 alpha surface for report consumers; the legacy `compression_ratio`, `filename`,
-and `safe_path` aliases remain for compatibility. `pagonic inspect --markdown` renders
-the same report as a saved Markdown document with an archive summary, risk flag
-table, entry table, and warnings/errors sections.
+and `safe_path` aliases remain for compatibility. Entries, risk flags, warnings,
+and errors have documented deterministic ordering. See the [Inspection JSON
+Schema Contract](inspection-schema.md) for the compatibility policy, migration
+guidance, ordering guarantees, and clean/risky/invalid examples. `pagonic
+inspect --markdown` renders the same report as a saved Markdown document with
+an archive summary, risk flag table, entry table, and warnings/errors sections.
 
 ## Risk Levels
 
