@@ -8,6 +8,10 @@ changes; future work belongs in [the roadmap](docs/roadmap.md).
 - Added project URLs and a manually dispatched Trusted Publishing workflow that
   builds from an explicitly selected, version-matched source tag.
 - Added maintainer instructions for the TestPyPI-first publication sequence.
+- Published `v0.5.0` to TestPyPI and PyPI through GitHub Actions Trusted
+  Publishing after clean Windows and Linux package-install smoke tests.
+- Updated the package publishing action to support the current core metadata
+  format used by the release artifacts.
 - No runtime behavior changed; `v0.5.0` remains the latest public release.
 
 ## 0.5.0 - Trustworthy inspection for automation

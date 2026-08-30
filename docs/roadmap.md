@@ -105,17 +105,17 @@ made.
   triage so outside contributors can make focused changes.
 
 The [package surface audit](package-audit.md) reviewed the 0.4.0 historical
-snapshot. The [0.5.0 release audit](release-audit-0.5.md) repeats the review
-for the current wheel and source distribution, metadata, entry points,
-optional GUI behavior, and clean install paths. The selected package target is
-GitHub Release; no PyPI or TestPyPI upload is made.
+snapshot. The [0.5.0 release audit](release-audit-0.5.md) records the original
+pre-publication review of the current wheel and source distribution, metadata,
+entry points, optional GUI behavior, and clean install paths. The initial
+release decision selected GitHub Release artifacts; the later publication
+follow-up is recorded in the [package publishing guide](package-publishing.md).
 
-The post-release publication path is now prepared in the [package publishing
-guide](package-publishing.md). The repository contains a tag-verified manual
-workflow, and the `testpypi` and `pypi` GitHub environments are restricted to
-the `main` workflow ref. The latest controlled TestPyPI run completed its build
-and artifact checks but stopped at the OIDC exchange because no matching
-TestPyPI trusted publisher is configured; no package was uploaded.
+The `v0.5.0` package is now published on [PyPI](https://pypi.org/project/pagonic/)
+and [TestPyPI](https://test.pypi.org/project/pagonic/). The tag-verified manual
+workflow remains in place, and the `testpypi` and `pypi` GitHub environments are
+restricted to the `main` workflow ref. Both publication workflows completed
+successfully with Trusted Publishing and digital attestations.
 
 ## 0.5 Release Gates (completed for v0.5.0)
 
@@ -167,16 +167,22 @@ Possible later work, subject to evidence and maintainer review:
 
 ### Packaging follow-up
 
-The first adoption follow-up remains operational rather than a runtime feature:
+The first adoption follow-up was operational rather than a runtime feature and
+is now complete:
 
-1. Register the pending GitHub Actions trusted publisher on TestPyPI for
-   `SetraTheXX/pagonic`, `.github/workflows/publish.yml`, and environment
-   `testpypi`.
-2. Run the workflow for the existing `v0.5.0` source tag and verify clean
-   Windows/Linux installation and CLI smoke behavior from TestPyPI.
-3. Register the matching PyPI publisher and publish the same verified artifact
-   only after the TestPyPI check passes.
-4. Update the public install instructions after the package index is live.
+1. Registered the pending GitHub Actions trusted publishers on TestPyPI and
+   PyPI for `SetraTheXX/pagonic`, `publish.yml`, and the matching environments.
+2. Published the existing `v0.5.0` source tag to TestPyPI and verified clean
+   Windows and Linux installation plus the CLI smoke flow.
+3. Published the same verified `v0.5.0` distributions to PyPI behind the
+   required environment review.
+4. Updated the public install instructions to use PyPI, with `uv` and `pipx`
+   alternatives.
+
+The immutable `v0.5.0` package description retains the pre-publication README
+snapshot; this is a documentation freshness issue, not an installation or
+runtime blocker. The next routine patch release that changes package metadata
+should refresh the embedded README and project URLs.
 
 No new issue is required for this bounded release-operations sequence; the
 existing seven 0.5 issues remain closed.

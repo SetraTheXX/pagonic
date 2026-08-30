@@ -12,7 +12,8 @@ def test_release_audit_records_the_0_5_release_decision_and_gates():
 
     assert "# Pagonic v0.5.0 Release Audit" in audit
     assert "Tag: `v0.5.0`" in audit
-    assert "PyPI/TestPyPI: not published" in audit
+    assert "PyPI/TestPyPI at audit time: not published" in audit
+    assert "package-index publication" in audit
     assert "[x] Normal local test suite passes." in audit
     assert "[x] Windows/Linux CI passes for Python 3.10 through 3.13." in audit
     assert "no release-blocking bug or logic contradiction" in audit

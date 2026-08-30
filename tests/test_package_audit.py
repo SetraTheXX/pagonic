@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def test_package_audit_records_contents_installation_and_no_publish_decision():
+def test_package_audit_records_contents_installation_and_original_no_publish_decision():
     repository_root = Path(__file__).resolve().parents[1]
     audit = (repository_root / "docs" / "package-audit.md").read_text(
         encoding="utf-8"
@@ -25,4 +25,5 @@ def test_public_docs_link_the_package_audit_and_roadmap_records_the_decision():
 
     assert "[Package Surface Audit](docs/package-audit.md)" in readme
     assert "[package surface audit](package-audit.md)" in roadmap
-    assert "no PyPI or TestPyPI upload" in roadmap
+    assert "The `v0.5.0` package is now published on" in roadmap
+    assert "package publishing guide" in roadmap
