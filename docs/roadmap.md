@@ -86,8 +86,9 @@ are added.
 ### Workstream C: Automation and Reporting
 
 - Keep Markdown output useful as a saved human report.
-- Evaluate SARIF output as a separate issue; it is not committed to the 0.5
-  scope until the existing schema and policy behavior are stable.
+- Keep SARIF output as a separate decision; it is deferred beyond 0.5 until a
+  concrete consumer and a stable archive-entry location strategy exist. See
+  the [SARIF evaluation](sarif-evaluation.md).
 
 The copyable [CI integration guide](ci-integration.md) now covers
 `verify --max-risk`, `safe-extract --dry-run`, and the final extraction step for
