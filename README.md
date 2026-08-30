@@ -18,9 +18,11 @@ before it writes files.
 * An optional PyQt6 GUI launched with `pagonic-gui`.
 
 This repository contains the `v0.5.0` alpha release. The import package remains
-`Pagonic` for compatibility; the distribution name is `pagonic`. No PyPI or
-TestPyPI package is published, so install from a local checkout or use the
-artifacts attached to the [GitHub release](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.0).
+`Pagonic` for compatibility; the distribution name is `pagonic`. The package is
+available on [PyPI](https://pypi.org/project/pagonic/) and the matching release
+is also available on [TestPyPI](https://test.pypi.org/project/pagonic/) for
+publication checks. The source and release artifacts remain available from the
+[GitHub release](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.0).
 
 ## Project Story
 
@@ -40,8 +42,27 @@ Pagonic is still evolving, but its purpose is now clearer: inspect first, extrac
 
 ## Install
 
-No PyPI or TestPyPI package is published for this release, so install from a
-local checkout after cloning the repository.
+For normal CLI use, install the published package from PyPI:
+
+```bash
+python -m pip install pagonic
+```
+
+For an isolated command-line installation, either `uv` or `pipx` can manage the
+tool environment:
+
+```bash
+uv tool install pagonic
+pipx install pagonic
+```
+
+Verify the installation:
+
+```bash
+pagonic --version
+```
+
+For local development, clone the repository first and install from the checkout.
 
 For CLI-only use from a local checkout:
 

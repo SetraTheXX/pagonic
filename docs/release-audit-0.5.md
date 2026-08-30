@@ -1,8 +1,10 @@
 # Pagonic v0.5.0 Release Audit
 
 This is the release-gate record for `v0.5.0`. It covers the source state that
-is tagged and published as the GitHub release. The package target is GitHub
-Release; no PyPI or TestPyPI upload is made.
+was tagged and published as the GitHub release. At the time of this audit, the
+package target was GitHub Release and no PyPI or TestPyPI upload had been made.
+The later package-index publication is recorded in
+[`docs/package-publishing.md`](package-publishing.md).
 
 ## Release decision
 
@@ -11,8 +13,8 @@ Release; no PyPI or TestPyPI upload is made.
 - Distribution: `pagonic`
 - Import package: `Pagonic`
 - Classification: Alpha
-- Package target: GitHub Release artifacts and source checkout
-- PyPI/TestPyPI: not published
+- Package target at audit time: GitHub Release artifacts and source checkout
+- PyPI/TestPyPI at audit time: not published
 
 The release decision preserves the existing 0.4.0 tag and keeps the version,
 tag, source state, and built artifacts aligned for the new release.
@@ -116,6 +118,7 @@ verification refusal, and safe-extraction refusal flow.
   limits; they are not converted into a claim of universal coverage.
 - SARIF remains deferred until a concrete consumer and safe location strategy
   are available.
-- PyPI/TestPyPI publication remains a separate future decision.
+- PyPI/TestPyPI publication was a separate post-release operation; its result is
+  recorded in [`docs/package-publishing.md`](package-publishing.md).
 - Future work should be driven by dogfood usage, concrete reports, and new
   security regression cases rather than speculative feature expansion.
