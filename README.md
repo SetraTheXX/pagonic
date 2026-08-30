@@ -17,7 +17,10 @@ before it writes files.
 * A `pagonic` command-line interface for inspect, verify, safe extract, and ZIP utilities.
 * An optional PyQt6 GUI launched with `pagonic-gui`.
 
-This repository is currently prepared as an alpha-stage, test-backed public release. The import package remains `Pagonic` for compatibility; the distribution name is `pagonic`. No PyPI or TestPyPI package is published for this release; install from a local checkout.
+This repository contains the `v0.5.0` alpha release. The import package remains
+`Pagonic` for compatibility; the distribution name is `pagonic`. No PyPI or
+TestPyPI package is published, so install from a local checkout or use the
+artifacts attached to the [GitHub release](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.0).
 
 ## Project Story
 
@@ -28,10 +31,10 @@ After many iterations, I revised the project direction and narrowed the public s
 > Pagonic is not trying to be another desktop archive manager.
 > It is becoming a security-aware ZIP inspection and safe extraction toolkit.
 
-This `v0.4.0` release builds on the first cleaned-up public direction. It keeps
-the useful ZIP core, CLI, tests, and safety work while making the focused reader,
-writer, inspection, and contribution surfaces clearer for the next stage of
-development.
+This `v0.5.0` release builds on the first cleaned-up public direction from
+`v0.4.0`. It keeps the useful ZIP core, CLI, tests, and safety work while making
+the inspection policy, regression corpus, automation examples, package surface,
+and compatibility boundaries explicit.
 
 Pagonic is still evolving, but its purpose is now clearer: inspect first, extract safely.
 
@@ -122,6 +125,8 @@ pyproject.toml    package metadata and tool config
 - [Inspection JSON Schema Contract](docs/inspection-schema.md)
 - [CI Integration](docs/ci-integration.md)
 - [Package Surface Audit](docs/package-audit.md)
+- [0.5 Migration Notes](docs/migration-0.5.md)
+- [0.5 Release Audit](docs/release-audit-0.5.md)
 - [SARIF Evaluation](docs/sarif-evaluation.md)
 - [ZipHandler Compatibility Policy](docs/zip-handler-compatibility.md)
 - [Developer Guide](docs/developer-guide.md)
@@ -195,12 +200,13 @@ commands and do not replace an inspection report.
 
 ## Status
 
-The current public release is `0.4.0`: an alpha-stage, test-backed release with
-security-aware ZIP inspection, gated safe extraction, core ZIP behavior, CLI
-support, optional GUI packaging, MIT license, and CI-ready tests.
+The current public release is `0.5.0`: an alpha-stage, test-backed release with
+security-aware ZIP inspection, explicit policy gates, a synthetic security
+regression corpus, gated safe extraction, core ZIP behavior, CLI support,
+optional GUI packaging, MIT license, and CI-ready tests.
 
 Pagonic is not intended for production-critical automation yet and is not
 positioned as a general multi-format desktop archive manager. The next work is
-the proposed 0.5 milestone: extending the now-explicit policy baseline with a
-larger synthetic security regression corpus, improving CI integration examples,
-and making public contribution safer and clearer.
+evidence-driven maintenance: collect real usage signals, expand the security
+corpus when new rules are added, and revisit deferred integrations only when a
+concrete consumer justifies them.

@@ -4,6 +4,9 @@ This document describes the migration from the 0.3.0 alpha surface to the
 0.4.0 API direction. The migration is now part of the current GitHub release;
 the notes remain useful for callers moving from the older compatibility surface.
 
+For the completed 0.4 to 0.5 release transition, see the [0.5 migration
+notes](migration-0.5.md).
+
 ## Product Flow
 
 The primary workflow is now inspection before extraction:

@@ -67,7 +67,7 @@ risk level. `ZipWriter` remains the public creation API. CLI commands such as
 `inspect`, `verify`, and `safe-extract` should reuse this service instead of
 duplicating path or ZIP bomb checks.
 
-`ZipHandler` is retained as a compatibility facade through 0.5. Its
+`ZipHandler` is retained as a compatibility facade through the 0.5 line. Its
 `compress()` and `decompress()` methods delegate to `ZipWriter` and
 `ZipReader`; new features must be added to those public APIs first rather than
 to the facade. The facade's 0.5 no-warning policy and future migration path are

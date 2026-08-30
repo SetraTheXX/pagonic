@@ -15,8 +15,8 @@ Pagonic is not a general multi-format desktop archive manager. Before opening
 a large change, please check [the roadmap](docs/roadmap.md) and search existing
 issues.
 
-The following are out of scope for the current 0.5 direction unless a roadmap
-decision changes:
+The following remain out of scope for the current 0.5 line and its maintenance
+work unless a roadmap decision changes:
 
 - New archive formats.
 - A GUI redesign or a WinRAR-style desktop application.

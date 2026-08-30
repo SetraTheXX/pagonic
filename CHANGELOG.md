@@ -7,6 +7,23 @@ changes; future work belongs in [the roadmap](docs/roadmap.md).
 
 No unreleased changes.
 
+## 0.5.0 - Trustworthy inspection for automation
+
+- Promoted the explicit inspection-policy, risk-threshold, and exit-code
+  contract for `verify` and `safe-extract` into the supported release surface.
+- Added a generated synthetic ZIP security regression corpus covering traversal,
+  collisions, metadata, structure, unsupported methods, and resource limits.
+- Documented the stable inspection JSON schema, deterministic ordering, CI
+  integration examples, and typed operation-result contracts.
+- Completed a fresh package-surface and clean-install audit for the 0.5.0
+  artifacts. The release is distributed through GitHub; no PyPI or TestPyPI
+  upload is made.
+- Evaluated SARIF without changing the current report schema and deferred its
+  implementation until a concrete consumer and location strategy exist.
+- Recorded the `ZipHandler` compatibility policy: the facade remains available
+  without a new deprecation warning throughout the 0.5 line.
+- Refreshed the inspect-first terminal demo for the current CLI surface.
+
 ## 0.4.0 - API polish and public surface
 
 - Stabilized typed result contracts for archive, compression, extraction, and
