@@ -61,8 +61,10 @@ surfaces without expanding Pagonic into a general archive manager.
 The policy and exit-code baseline is now implemented in `Pagonic.cli.policy`,
 covered by focused CLI and policy tests, and documented in the [inspection
 policy contract](inspection-policy.md). The remaining 0.5 work in this stream
-is report/schema determinism, resource-limit review, and broader regression
-coverage.
+is resource-limit review and broader regression coverage. The schema
+compatibility and deterministic ordering contract is documented in the
+[Inspection JSON Schema Contract](inspection-schema.md) and locked by schema
+regression tests.
 
 ### Workstream B: Security Regression Corpus
 

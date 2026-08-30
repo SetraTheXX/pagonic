@@ -65,8 +65,12 @@ should prefer these canonical fields:
   `risk_flags`.
 
 The early-alpha aliases `compression_ratio`, `filename`, and `safe_path` remain
-for compatibility. New consumers should not build new logic around those
-aliases.
+serialized for compatibility. New consumers should not build new logic around
+those aliases.
+
+See the [Inspection JSON Schema Contract](inspection-schema.md) for the full
+versioning policy, deterministic array ordering, migration example, and clean,
+risky, and invalid report shapes.
 
 ### Typed Operation Results
 
