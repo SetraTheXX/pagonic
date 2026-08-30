@@ -43,14 +43,17 @@ calling `inspect_archive()` for the reader's archive.
 
 ## ZipHandler Compatibility
 
-`ZipHandler` remains available in the 0.3 alpha and the 0.4 transition. It is
-now a thin compatibility facade that delegates archive creation and extraction
-to `ZipWriter` and `ZipReader`. Existing callers can keep using it while new
-code moves to the focused APIs.
+`ZipHandler` remains available through the 0.5 line as a thin compatibility
+facade. It delegates archive creation and extraction to `ZipWriter` and
+`ZipReader`. Existing callers can keep using it while new code moves to the
+focused APIs.
 
-Do not add new product behavior to `ZipHandler`. A future breaking release may
-introduce an explicit deprecation policy, but 0.4 migration work does not
-silently remove the class or add a deprecation warning by itself.
+The 0.5 policy keeps the facade's public exports and legacy result shapes
+unchanged and does not add a new `DeprecationWarning`. Do not add new product
+behavior to `ZipHandler`; future deprecation or removal requires a separate
+breaking-release decision and migration path. See the [ZipHandler
+Compatibility Policy](zip-handler-compatibility.md) for the inventory,
+replacement table, and validation rules.
 
 ## Inspection Report Contract
 

@@ -58,8 +58,10 @@ reject unsafe filenames where required, and keep ZIP bomb checks explicit.
 
 The import package remains `Pagonic` in this release. A future lowercase `pagonic` package rename would need a compatibility bridge and migration notes.
 
-`ZipHandler` remains available for older callers, but new code should use
-`ZipReader`, `ZipWriter`, and `inspect_archive` directly. The handler now
+`ZipHandler` remains available for older callers through 0.5, but new code
+should use `ZipReader`, `ZipWriter`, and `inspect_archive` directly. The handler
 delegates archive creation and extraction to the public reader/writer APIs and
 keeps only compatibility metadata, result shaping, and small legacy wrappers.
+See the [ZipHandler Compatibility Policy](zip-handler-compatibility.md) before
+changing its exports or behavior.
 It is intentionally kept outside the inspector's normal import path.

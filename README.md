@@ -123,6 +123,7 @@ pyproject.toml    package metadata and tool config
 - [CI Integration](docs/ci-integration.md)
 - [Package Surface Audit](docs/package-audit.md)
 - [SARIF Evaluation](docs/sarif-evaluation.md)
+- [ZipHandler Compatibility Policy](docs/zip-handler-compatibility.md)
 - [Developer Guide](docs/developer-guide.md)
 - [0.4 Migration Notes](docs/migration-0.4.md)
 - [Roadmap](docs/roadmap.md)

@@ -136,7 +136,7 @@ small enough to review independently.
 4. [Add a CI integration example for `verify --max-risk`.](https://github.com/SetraTheXX/pagonic/issues/4)
 5. [Audit wheel and source distribution contents for a future alpha publish.](https://github.com/SetraTheXX/pagonic/issues/5)
 6. [Evaluate SARIF output without changing the current report schema.](https://github.com/SetraTheXX/pagonic/issues/6)
-7. [Write a compatibility decision for the future `ZipHandler` deprecation.](https://github.com/SetraTheXX/pagonic/issues/7)
+7. [Decide the compatibility and deprecation path for `ZipHandler`.](https://github.com/SetraTheXX/pagonic/issues/7)
 
 Issues that add a new archive format, redesign the GUI, rewrite the engine in a
 native language, or make universal speed claims should be discussed separately
@@ -152,7 +152,9 @@ Possible later work, subject to evidence and maintainer review:
 - A minimal inspector GUI only if the CLI/API workflow proves useful first.
 - A separately maintained native-performance experiment, if benchmarks show a
   real need and the maintenance cost is understood.
-- A clearer compatibility and deprecation policy for `ZipHandler`.
+- A separately announced breaking-release compatibility and deprecation path
+  for `ZipHandler`, subject to migration evidence. The 0.5 policy is recorded
+  in the [ZipHandler Compatibility Policy](zip-handler-compatibility.md).
 
 ## How to Contribute to the Roadmap
 
