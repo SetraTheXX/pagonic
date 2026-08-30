@@ -44,6 +44,13 @@ performance = [
 pagonic = "Pagonic.cli.main:cli"
 pagonic-gui = "Pagonic.gui.__main__:main"
 
+[project.urls]
+Homepage = "https://github.com/SetraTheXX/pagonic"
+Repository = "https://github.com/SetraTheXX/pagonic"
+Issues = "https://github.com/SetraTheXX/pagonic/issues"
+Changelog = "https://github.com/SetraTheXX/pagonic/blob/main/CHANGELOG.md"
+Security = "https://github.com/SetraTheXX/pagonic/security/policy"
+
 [tool.setuptools.packages.find]
 include = ["Pagonic*"]
 exclude = ["tests*"]
