@@ -50,6 +50,9 @@ writing files and supports `--dry-run`.
 See the [inspection policy contract](inspection-policy.md) for the complete
 clean/risky/invalid decision table and command exit-code behavior.
 
+For a copyable GitHub Actions, Bash, and PowerShell pipeline example, see the
+[CI integration guide](ci-integration.md).
+
 The older `extract` command remains as a compatibility command for trusted
 archives. It uses secure path handling, but it is not an inspection policy gate;
 use `safe-extract` for untrusted input. `list` and `info` are read-only display

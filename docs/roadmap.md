@@ -85,11 +85,15 @@ are added.
 
 ### Workstream C: Automation and Reporting
 
-- Add concise integration examples for JSON inspection and exit codes.
-- Document how a CI job can inspect an upload before extraction.
 - Keep Markdown output useful as a saved human report.
 - Evaluate SARIF output as a separate issue; it is not committed to the 0.5
   scope until the existing schema and policy behavior are stable.
+
+The copyable [CI integration guide](ci-integration.md) now covers
+`verify --max-risk`, `safe-extract --dry-run`, and the final extraction step for
+GitHub Actions, Bash, and PowerShell. It relies on exit codes and keeps the
+package installation local to the checkout until a package-publish decision is
+made.
 
 ### Workstream D: Public Packaging and Onboarding
 
