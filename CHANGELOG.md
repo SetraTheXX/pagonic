@@ -5,7 +5,10 @@ changes; future work belongs in [the roadmap](docs/roadmap.md).
 
 ## Unreleased
 
-No unreleased changes.
+- Added project URLs and a manually dispatched Trusted Publishing workflow that
+  builds from an explicitly selected, version-matched source tag.
+- Added maintainer instructions for the TestPyPI-first publication sequence.
+- No runtime behavior changed; `v0.5.0` remains the latest public release.
 
 ## 0.5.0 - Trustworthy inspection for automation
 
