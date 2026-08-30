@@ -60,7 +60,8 @@ audit’s proof boundary.
 ## Verification evidence
 
 - Release-preparation source commit: `8458fa2896b9def0c5e1eb238d528010a721efa8`.
-- GitHub Actions validation for that commit: [run `33303634593`](https://github.com/SetraTheXX/pagonic/actions/runs/33303634593), all 8 Windows/Linux Python 3.10–3.13 jobs successful.
+- Final tagged release commit: `d2bb64b694e7f0ed3878e0ea34a3226b1c73f22d`.
+- GitHub Actions validation for the final tagged commit: [run `33303740039`](https://github.com/SetraTheXX/pagonic/actions/runs/33303740039), all 8 Windows/Linux Python 3.10–3.13 jobs successful.
 - `python -m pytest -q --cov=Pagonic --cov-report=term-missing`: **399 passed,
   8 skipped**; total measured coverage was 60% across the full package,
   including optional and historical compatibility modules.
