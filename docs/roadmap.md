@@ -74,6 +74,13 @@ coverage.
 - Run the relevant fixture set on Windows and Linux.
 - Keep malicious or sensitive samples out of the public repository.
 
+The generated corpus in `tests/security/corpus.py` and its focused tests in
+`tests/security/test_corpus.py` now cover these documented input classes and
+the corresponding `safe-extract` allow/refuse boundaries. The existing CI
+matrix runs the corpus on Windows and Linux for the supported Python versions;
+the remaining work in this stream is to expand cases when new security rules
+are added.
+
 ### Workstream C: Automation and Reporting
 
 - Add concise integration examples for JSON inspection and exit codes.
