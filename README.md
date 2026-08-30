@@ -120,6 +120,7 @@ pyproject.toml    package metadata and tool config
 - [User Guide](docs/user-guide.md)
 - [Inspection Policy Contract](docs/inspection-policy.md)
 - [Inspection JSON Schema Contract](docs/inspection-schema.md)
+- [CI Integration](docs/ci-integration.md)
 - [Developer Guide](docs/developer-guide.md)
 - [0.4 Migration Notes](docs/migration-0.4.md)
 - [Roadmap](docs/roadmap.md)

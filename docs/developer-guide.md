@@ -128,6 +128,9 @@ the [inspection policy contract](inspection-policy.md). Keep policy tests and
 CLI behavior synchronized with that document when changing thresholds or
 validation handling.
 
+The copyable [CI integration guide](ci-integration.md) demonstrates the same
+exit-code contract for GitHub Actions, Bash, and PowerShell workflows.
+
 ## Development Notes
 
 - Keep the import package name `Pagonic` until a planned migration introduces lowercase compatibility.
