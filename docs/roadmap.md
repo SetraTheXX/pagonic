@@ -103,6 +103,12 @@ made.
 - Improve examples, contribution guidance, security reporting, and issue
   triage so outside contributors can make focused changes.
 
+The [package surface audit](package-audit.md) reviewed the 0.4.0 wheel and
+source distribution, metadata, entry points, optional GUI behavior, and clean
+install paths. The recorded decision is no PyPI or TestPyPI publish for the
+current post-release 0.4.0 source state. A future 0.5 release must repeat the
+audit after its version and matching tag are finalized.
+
 ## 0.5 Release Gates
 
 A 0.5 candidate should not be called ready until all of these are true:
