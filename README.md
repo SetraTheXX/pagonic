@@ -125,6 +125,7 @@ pyproject.toml    package metadata and tool config
 - [Inspection JSON Schema Contract](docs/inspection-schema.md)
 - [CI Integration](docs/ci-integration.md)
 - [Package Surface Audit](docs/package-audit.md)
+- [Package Publishing](docs/package-publishing.md)
 - [0.5 Migration Notes](docs/migration-0.5.md)
 - [0.5 Release Audit](docs/release-audit-0.5.md)
 - [SARIF Evaluation](docs/sarif-evaluation.md)

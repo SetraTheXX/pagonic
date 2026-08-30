@@ -110,6 +110,13 @@ for the current wheel and source distribution, metadata, entry points,
 optional GUI behavior, and clean install paths. The selected package target is
 GitHub Release; no PyPI or TestPyPI upload is made.
 
+The post-release publication path is now prepared in the [package publishing
+guide](package-publishing.md). The repository contains a tag-verified manual
+workflow, and the `testpypi` and `pypi` GitHub environments are restricted to
+the `main` workflow ref. The latest controlled TestPyPI run completed its build
+and artifact checks but stopped at the OIDC exchange because no matching
+TestPyPI trusted publisher is configured; no package was uploaded.
+
 ## 0.5 Release Gates (completed for v0.5.0)
 
 The following gates were checked for `v0.5.0` and are recorded in the
@@ -157,6 +164,22 @@ Possible later work, subject to evidence and maintainer review:
 - A separately announced breaking-release compatibility and deprecation path
   for `ZipHandler`, subject to migration evidence. The 0.5 policy is recorded
   in the [ZipHandler Compatibility Policy](zip-handler-compatibility.md).
+
+### Packaging follow-up
+
+The first adoption follow-up remains operational rather than a runtime feature:
+
+1. Register the pending GitHub Actions trusted publisher on TestPyPI for
+   `SetraTheXX/pagonic`, `.github/workflows/publish.yml`, and environment
+   `testpypi`.
+2. Run the workflow for the existing `v0.5.0` source tag and verify clean
+   Windows/Linux installation and CLI smoke behavior from TestPyPI.
+3. Register the matching PyPI publisher and publish the same verified artifact
+   only after the TestPyPI check passes.
+4. Update the public install instructions after the package index is live.
+
+No new issue is required for this bounded release-operations sequence; the
+existing seven 0.5 issues remain closed.
 
 ## How to Contribute to the Roadmap
 
