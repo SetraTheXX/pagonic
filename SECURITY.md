@@ -42,7 +42,7 @@ but reports affecting them are still welcome.
 
 ## Supported Baseline
 
-The current public baseline is the `0.4.x` alpha line and the `main` branch.
+The current public baseline is the `0.5.x` alpha line and the `main` branch.
 Pagonic is not presented as production-ready. Users should validate the tool
 against their own threat model and keep extraction targets isolated.
 

@@ -25,4 +25,4 @@ def test_public_docs_link_the_package_audit_and_roadmap_records_the_decision():
 
     assert "[Package Surface Audit](docs/package-audit.md)" in readme
     assert "[package surface audit](package-audit.md)" in roadmap
-    assert "no PyPI or TestPyPI publish" in roadmap
+    assert "no PyPI or TestPyPI upload" in roadmap

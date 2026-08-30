@@ -17,7 +17,7 @@ universal benchmark superiority, or runtime AI features.
 
 ## Current Baseline
 
-### 0.4.0 Alpha - Available
+### 0.4.0 Alpha - Historical baseline
 
 The current release baseline includes:
 
@@ -40,14 +40,15 @@ The current release baseline includes:
   codes.
 
 The previous `0.3.0` release established the initial cleaned-up alpha surface.
-The current package version is `0.4.0`; the next planned milestone is 0.5.
+The `0.4.0` release established the focused public API and package surface.
+The current package version is `0.5.0`; the 0.5 milestone is now released.
 
-## 0.5 Proposed Milestone
+## 0.5.0 Released Milestone
 
 ### Theme: Trustworthy Inspection for Automation
 
-The 0.5 goal is to make the existing inspector easier to integrate and harder
-to misunderstand. It should improve confidence in the report and policy
+The 0.5 goal was to make the existing inspector easier to integrate and harder
+to misunderstand. The release improves confidence in the report and policy
 surfaces without expanding Pagonic into a general archive manager.
 
 ### Workstream A: Stable Inspection and Policy Contracts
@@ -58,13 +59,13 @@ surfaces without expanding Pagonic into a general archive manager.
 - Review configurable resource limits without weakening secure defaults.
 - Keep typed Python result contracts synchronized with runtime mappings.
 
-The policy and exit-code baseline is now implemented in `Pagonic.cli.policy`,
+The policy and exit-code baseline is implemented in `Pagonic.cli.policy`,
 covered by focused CLI and policy tests, and documented in the [inspection
-policy contract](inspection-policy.md). The remaining 0.5 work in this stream
-is resource-limit review and broader regression coverage. The schema
-compatibility and deterministic ordering contract is documented in the
-[Inspection JSON Schema Contract](inspection-schema.md) and locked by schema
-regression tests.
+policy contract](inspection-policy.md). The release audit reviewed the existing
+resource-limit defaults and retained them without weakening secure behavior.
+The schema compatibility and deterministic ordering contract is documented in
+the [Inspection JSON Schema Contract](inspection-schema.md) and locked by
+schema regression tests.
 
 ### Workstream B: Security Regression Corpus
 
@@ -77,11 +78,10 @@ regression tests.
 - Keep malicious or sensitive samples out of the public repository.
 
 The generated corpus in `tests/security/corpus.py` and its focused tests in
-`tests/security/test_corpus.py` now cover these documented input classes and
-the corresponding `safe-extract` allow/refuse boundaries. The existing CI
-matrix runs the corpus on Windows and Linux for the supported Python versions;
-the remaining work in this stream is to expand cases when new security rules
-are added.
+`tests/security/test_corpus.py` cover these documented input classes and the
+corresponding `safe-extract` allow/refuse boundaries. The CI matrix runs the
+corpus on Windows and Linux for the supported Python versions. Future cases
+should be added when new security rules or concrete regression reports appear.
 
 ### Workstream C: Automation and Reporting
 
@@ -104,15 +104,16 @@ made.
 - Improve examples, contribution guidance, security reporting, and issue
   triage so outside contributors can make focused changes.
 
-The [package surface audit](package-audit.md) reviewed the 0.4.0 wheel and
-source distribution, metadata, entry points, optional GUI behavior, and clean
-install paths. The recorded decision is no PyPI or TestPyPI publish for the
-current post-release 0.4.0 source state. A future 0.5 release must repeat the
-audit after its version and matching tag are finalized.
+The [package surface audit](package-audit.md) reviewed the 0.4.0 historical
+snapshot. The [0.5.0 release audit](release-audit-0.5.md) repeats the review
+for the current wheel and source distribution, metadata, entry points,
+optional GUI behavior, and clean install paths. The selected package target is
+GitHub Release; no PyPI or TestPyPI upload is made.
 
-## 0.5 Release Gates
+## 0.5 Release Gates (completed for v0.5.0)
 
-A 0.5 candidate should not be called ready until all of these are true:
+The following gates were checked for `v0.5.0` and are recorded in the
+[release audit](release-audit-0.5.md):
 
 - Normal and comprehensive local suites pass.
 - Windows and Linux CI passes for the supported Python range.
@@ -125,10 +126,11 @@ A 0.5 candidate should not be called ready until all of these are true:
 - Public docs contain no unsupported speed, AI, or archive-manager claims.
 - A release decision explicitly chooses the version, tag, and package target.
 
-## Issue Backlog Candidates
+## 0.5 Issue Backlog (completed)
 
-These are the first focused issues for the 0.5 milestone. Each should remain
-small enough to review independently.
+These seven focused issues formed the 0.5 milestone scope. Their implementation
+and review evidence is recorded in the linked commits and release audit; the
+GitHub issues are closed after the release is verified.
 
 1. [Define and test the 0.5 inspection policy contract.](https://github.com/SetraTheXX/pagonic/issues/1)
 2. [Expand the synthetic ZIP security regression corpus.](https://github.com/SetraTheXX/pagonic/issues/2)

@@ -18,8 +18,8 @@ Set WindowBar "Colorful"
 Set WindowBarSize 36
 Set Theme "Catppuccin Mocha"
 Set Framerate 16
-Set PlaybackSpeed 0.9
-Set TypingSpeed 55ms
+Set PlaybackSpeed 0.8
+Set TypingSpeed 85ms
 Set CursorBlink false
 
 Hide
@@ -34,14 +34,15 @@ Type "Clear-Host" Enter
 Sleep 800ms
 Show
 
-Type "pagonic inspect pagonic-demo.zip"
-Sleep 800ms
-Enter
-Sleep 2s
-Type "pagonic verify pagonic-demo.zip" Enter
+Sleep 1200ms
+Type "pagonic --version" Enter
 Sleep 1500ms
+Type "pagonic inspect pagonic-demo.zip" Enter
+Sleep 3s
+Type "pagonic verify pagonic-demo.zip" Enter
+Sleep 2200ms
 Type "pagonic safe-extract pagonic-demo.zip extracted" Enter
-Sleep 2s
+Sleep 3s
 
 Hide
 Type "Set-Location -LiteralPath $env:PAGONIC_DEMO_ROOT" Enter

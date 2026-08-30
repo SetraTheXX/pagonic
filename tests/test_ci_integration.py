@@ -56,8 +56,8 @@ def test_ci_documentation_explains_both_gates_and_failure_behavior():
     assert "real extraction step is not reached" in documentation
     assert "Create demo archive" in documentation
     assert "Replace the demo-archive step" in documentation
-    assert "Pagonic is not yet" in documentation
-    assert "published to PyPI" in documentation
+    assert "Pagonic `0.5.0` is" in documentation
+    assert "not published to PyPI or TestPyPI" in documentation
 
 
 def test_ci_commands_pass_clean_archive_without_writing_during_dry_run(tmp_path):

@@ -1,6 +1,9 @@
 # Package Surface Audit
 
-This document records the package-surface review for the current `0.4.0`
+This document records the historical `0.4.0` package-surface snapshot. The
+current release audit is in [0.5.0 Release Audit](release-audit-0.5.md).
+
+This document records the package-surface review for the historical `0.4.0`
 baseline. It is an audit record, not a package publication announcement.
 
 ## Scope and decision

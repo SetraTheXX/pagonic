@@ -68,9 +68,10 @@ the real extraction step is not reached when `verify` or the dry run refuses
 the archive. `safe-extract --dry-run` also does not create the output directory
 or write files.
 
-The example installs from the repository checkout because Pagonic is not yet
-published to PyPI. A future published-package workflow can replace
-`python -m pip install .` with its reviewed package installation command.
+The example installs from the repository checkout because Pagonic `0.5.0` is
+distributed through GitHub Release and is not published to PyPI or TestPyPI.
+A future published-package workflow can replace `python -m pip install .` with
+its reviewed package installation command.
 
 ## Bash
 
