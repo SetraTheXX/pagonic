@@ -1,7 +1,16 @@
 # Pagonic
 
-Pagonic is an alpha Python ZIP toolkit focused on safe archive inspection,
-secure extraction, and repeatable local benchmarking. Its main idea is simple:
+<p align="center">
+  <a href="https://pypi.org/project/pagonic/"><img src="https://img.shields.io/pypi/v/pagonic.svg" alt="PyPI version"></a>
+  <a href="https://github.com/SetraTheXX/pagonic/actions/workflows/tests.yml"><img src="https://github.com/SetraTheXX/pagonic/actions/workflows/tests.yml/badge.svg?branch=main" alt="Tests"></a>
+  <a href="https://github.com/SetraTheXX/pagonic/blob/main/LICENSE"><img src="https://img.shields.io/github/license/SetraTheXX/pagonic.svg" alt="MIT license"></a>
+</p>
+
+### Inspect ZIP archives before extraction writes files.
+
+Pagonic is a security-aware Python CLI and library for untrusted or uncertain
+ZIP files. It produces deterministic risk reports, exposes CI-friendly policy
+checks, and gates extraction before files are written.
 
 > Inspect before you extract.
 
@@ -9,9 +18,11 @@ secure extraction, and repeatable local benchmarking. Its main idea is simple:
   <img src="assets/pagonic-demo.gif" alt="Pagonic inspecting a suspicious ZIP and refusing unsafe automation" width="960">
 </p>
 
-The intended workflow is visible in the demo: inspect the archive, verify it
-against an explicit risk threshold, and let `safe-extract` refuse unsafe input
-before it writes files.
+The intended workflow is visible in the demo:
+
+1. `inspect` the archive and produce a human, JSON, or Markdown report.
+2. `verify` the report against an explicit risk threshold for CI or scripts.
+3. Let `safe-extract` apply the inspection gate before writing files.
 
 * A core library for inspecting, writing, reading, and validating ZIP archives.
 * A `pagonic` command-line interface for inspect, verify, safe extract, and ZIP utilities.
