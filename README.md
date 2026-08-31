@@ -73,6 +73,12 @@ Verify the installation:
 pagonic --version
 ```
 
+On Windows, open a new terminal if the command is not recognized immediately
+after installation. If `pip` warns that its Python `Scripts` directory is not
+on `PATH`, add that directory to `PATH` or use the isolated `uv`/`pipx` install
+above. If `pip show pagonic` points to an old or deleted checkout, reinstall
+from the current repository root with `python -m pip install --upgrade --force-reinstall -e .`.
+
 For local development, clone the repository first and install from the checkout.
 
 For CLI-only use from a local checkout:
