@@ -17,7 +17,7 @@ from ..zip_reader import ZipReader
 from ..zip_writer import ZipWriter
 
 logger = logging.getLogger(__name__)
-HANDLER_VERSION = "0.5.0"
+HANDLER_VERSION = "0.5.1"
 
 
 class ZipHandler(FormatHandler):

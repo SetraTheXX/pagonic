@@ -7,7 +7,7 @@ These files support the repository README and are not runtime dependencies.
   demonstrates inspection, verification failure, and safe-extraction refusal,
   then removes only that temporary directory.
 - `pagonic-demo.gif` is the rendered README preview from the tape. It shows the
-  current `0.5.0` CLI version, inspection, verification refusal, and safe-
+  current `0.5.1` CLI version, inspection, verification refusal, and safe-
   extraction refusal at a deliberately readable pace. Regenerate it from the
   repository root with `vhs assets/pagonic-demo.tape`.
 

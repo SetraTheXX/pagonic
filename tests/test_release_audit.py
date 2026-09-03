@@ -32,5 +32,5 @@ def test_public_docs_identify_the_released_0_5_surface():
 
 
 def test_runtime_and_compatibility_versions_are_aligned():
-    assert __version__ == "0.5.0"
+    assert __version__ == "0.5.1"
     assert HANDLER_VERSION == __version__

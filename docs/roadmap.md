@@ -41,7 +41,8 @@ The current release baseline includes:
 
 The previous `0.3.0` release established the initial cleaned-up alpha surface.
 The `0.4.0` release established the focused public API and package surface.
-The current package version is `0.5.0`; the 0.5 milestone is now released.
+The latest published package version is `0.5.0`; the repository is prepared for
+the `0.5.1` public metadata patch while the 0.5 milestone remains released.
 
 ## 0.5.0 Released Milestone
 
@@ -92,9 +93,9 @@ should be added when new security rules or concrete regression reports appear.
 
 The copyable [CI integration guide](ci-integration.md) now covers
 `verify --max-risk`, `safe-extract --dry-run`, and the final extraction step for
-GitHub Actions, Bash, and PowerShell. It relies on exit codes and keeps the
-package installation local to the checkout until a package-publish decision is
-made.
+GitHub Actions, Bash, and PowerShell. It relies on exit codes and uses a pinned
+published package for consumer workflows; source-checkout installation remains
+available as an explicit development option.
 
 ### Workstream D: Public Packaging and Onboarding
 
@@ -181,8 +182,22 @@ is now complete:
 
 The immutable `v0.5.0` package description retains the pre-publication README
 snapshot; this is a documentation freshness issue, not an installation or
-runtime blocker. The next routine patch release that changes package metadata
-should refresh the embedded README and project URLs.
+runtime blocker. The prepared `v0.5.1` patch release refreshes the embedded
+README and project URLs.
+
+### v0.5.1 public release preparation
+
+The patch release carries no runtime feature. Repository preparation is
+complete; the remaining steps require the maintainer's package-index and GitHub
+release actions:
+
+- [x] Align package, import, and compatibility-facade versions at `0.5.1`.
+- [x] Refresh the embedded README and public install path.
+- [x] Update the CI integration example and publishing checklist.
+- [x] Regenerate the inspect-first README demo for the current CLI version.
+- [ ] Publish and smoke-test `v0.5.1` on TestPyPI.
+- [ ] Publish and verify the same artifacts on PyPI.
+- [ ] Create the normal GitHub release and begin the public campaign.
 
 No new issue is required for this bounded release-operations sequence; the
 existing seven 0.5 issues remain closed.

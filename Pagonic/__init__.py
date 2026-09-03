@@ -1,6 +1,6 @@
 """Pagonic security-aware ZIP inspection and extraction toolkit."""
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 __author__ = "Pagonic contributors"
 
 from .core.formats.base import FormatHandler

@@ -5,14 +5,23 @@ changes; future work belongs in [the roadmap](docs/roadmap.md).
 
 ## Unreleased
 
+- Future work remains evidence-driven maintenance; no new runtime feature is
+  implied by the public packaging work below.
+
+## 0.5.1 - Public package metadata and onboarding refresh
+
 - Added project URLs and a manually dispatched Trusted Publishing workflow that
   builds from an explicitly selected, version-matched source tag.
 - Added maintainer instructions for the TestPyPI-first publication sequence.
-- Published `v0.5.0` to TestPyPI and PyPI through GitHub Actions Trusted
-  Publishing after clean Windows and Linux package-install smoke tests.
+- Refreshed the `v0.5.1` package README and metadata so the published
+  installation path is described accurately.
+- Updated the public CI integration example to install the reviewed package
+  from PyPI with a reproducible patch-version pin.
+- Refreshed the inspect-first terminal demo for the `0.5.1` CLI surface.
 - Updated the package publishing action to support the current core metadata
   format used by the release artifacts.
-- No runtime behavior changed; `v0.5.0` remains the latest public release.
+- No runtime behavior changed; the ZIP inspection, policy, and safe-extraction
+  surface remains the `0.5.0` behavior line.
 
 ## 0.5.0 - Trustworthy inspection for automation
 
@@ -23,13 +32,13 @@ changes; future work belongs in [the roadmap](docs/roadmap.md).
 - Documented the stable inspection JSON schema, deterministic ordering, CI
   integration examples, and typed operation-result contracts.
 - Completed a fresh package-surface and clean-install audit for the 0.5.0
-  artifacts. The release is distributed through GitHub; no PyPI or TestPyPI
-  upload is made.
+  artifacts. The original audit covered the GitHub release before the later
+  PyPI/TestPyPI publication; the publication record is kept in the package
+  publishing guide.
 - Evaluated SARIF without changing the current report schema and deferred its
   implementation until a concrete consumer and location strategy exist.
 - Recorded the `ZipHandler` compatibility policy: the facade remains available
   without a new deprecation warning throughout the 0.5 line.
-- Refreshed the inspect-first terminal demo for the current CLI surface.
 
 ## 0.4.0 - API polish and public surface
 

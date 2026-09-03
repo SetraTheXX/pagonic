@@ -38,10 +38,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Pagonic from this checkout
+      - name: Install Pagonic from PyPI
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
+          python -m pip install "pagonic==0.5.1"
 
       - name: Create demo archive
         run: |
@@ -68,10 +68,9 @@ the real extraction step is not reached when `verify` or the dry run refuses
 the archive. `safe-extract --dry-run` also does not create the output directory
 or write files.
 
-The example installs from the repository checkout because Pagonic `0.5.0` is
-distributed through GitHub Release and is not published to PyPI or TestPyPI.
-A future published-package workflow can replace `python -m pip install .` with
-its reviewed package installation command.
+The example installs the reviewed package from PyPI and pins the patch version
+so the CI policy remains reproducible. For source-checkout validation, replace
+the install command deliberately with `python -m pip install .`.
 
 ## Bash
 
