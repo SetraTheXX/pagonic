@@ -45,20 +45,37 @@ The package source and version were unchanged.
 
 Because `v0.5.0` is immutable and was built from the release tag before this
 publication follow-up, its embedded project description is the pre-publication
-README snapshot. This does not affect installation or runtime behavior; the
-next routine patch release that changes package metadata should carry the
-current README and project URLs.
+README snapshot. This does not affect installation or runtime behavior. The
+prepared `v0.5.1` patch release carries the current README, project URLs, and
+public PyPI installation path.
+
+## v0.5.1 publication checklist
+
+The repository is prepared for a metadata and onboarding patch release. It does
+not introduce a runtime feature or change the ZIP inspection policy.
+
+- `pyproject.toml`, `Pagonic.__version__`, and `HANDLER_VERSION` are aligned at
+  `0.5.1`.
+- The embedded README uses the public PyPI installation path and current
+  project links.
+- The CI integration example pins `pagonic==0.5.1` for reproducible usage.
+- The README demo source and rendered GIF use the current CLI version.
+- The remaining publication steps below require maintainer-controlled PyPI /
+  TestPyPI actions and a final clean-install check.
 
 ## Publish sequence
 
-1. Create and push a matching tag, for example `v0.5.1` for package version
-   `0.5.1`.
+1. Create and push the matching `v0.5.1` tag for package version `0.5.1`.
 2. Run **Publish package** manually from `main`, enter the matching source tag,
    and select `testpypi`.
 3. Install from TestPyPI in a clean virtual environment and run the CLI smoke
    checks before considering a PyPI publication.
 4. Run the same workflow from `main` with the same source tag and `pypi`
    selected only after the TestPyPI smoke test and release audit pass.
+5. Create a normal GitHub release for `v0.5.1` and attach the exact wheel and
+   source distribution produced by the verified publish build.
+6. Re-check the rendered PyPI description, `python -m pip install pagonic`,
+   `pagonic --version`, and the README links before starting the campaign.
 
 The workflow rejects dispatches outside `main`, non-`v` source tags, missing or
 different checked-out tags, and tags that do not match the package version. It

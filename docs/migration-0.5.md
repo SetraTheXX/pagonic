@@ -25,17 +25,20 @@ schema compatible while making automation and security expectations explicit.
 
 There is no intended breaking runtime API change in 0.5. Existing imports,
 legacy `ZipHandler` result shapes, inspection schema version `"1"`, and CLI
-exit-code behavior remain supported. The package version is `0.5.0`; the import
-package remains `Pagonic` and the distribution name remains `pagonic`.
+exit-code behavior remain supported. The 0.5.x package line uses the import
+package `Pagonic` and the distribution name `pagonic`.
 
 ## Installation
 
-The release is available through the [GitHub release page](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.0).
-No PyPI or TestPyPI package is published. Install from a checkout or install a
-wheel downloaded from the GitHub release:
+The 0.5.x package line is available from [PyPI](https://pypi.org/project/pagonic/)
+and the matching publication checks are available on
+[TestPyPI](https://test.pypi.org/project/pagonic/). The source and release
+artifacts remain available through the [GitHub release page](https://github.com/SetraTheXX/pagonic/releases/latest).
+
+Install the current public package with:
 
 ```bash
-python -m pip install pagonic-0.5.0-py3-none-any.whl
+python -m pip install pagonic
 ```
 
 For untrusted archives, keep the workflow explicit:

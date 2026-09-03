@@ -1,6 +1,6 @@
 # Pagonic v0.5.0 Release Audit
 
-This is the release-gate record for `v0.5.0`. It covers the source state that
+This is the historical release-gate record for `v0.5.0`. It covers the source state that
 was tagged and published as the GitHub release. At the time of this audit, the
 package target was GitHub Release and no PyPI or TestPyPI upload had been made.
 The later package-index publication is recorded in

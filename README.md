@@ -24,16 +24,29 @@ The intended workflow is visible in the demo:
 2. `verify` the report against an explicit risk threshold for CI or scripts.
 3. Let `safe-extract` apply the inspection gate before writing files.
 
+## Try it in 30 seconds
+
+```bash
+python -m pip install pagonic
+pagonic inspect archive.zip --json
+pagonic verify archive.zip --max-risk low
+pagonic safe-extract archive.zip extracted --allow-risk low
+```
+
+Use the exit code from `verify` or `safe-extract` as the automation decision.
+For a clean archive, verification reports `risk level ok`; risky or invalid
+archives return a non-zero result before files are written.
+
 * A core library for inspecting, writing, reading, and validating ZIP archives.
 * A `pagonic` command-line interface for inspect, verify, safe extract, and ZIP utilities.
 * An optional PyQt6 GUI launched with `pagonic-gui`.
 
-This repository contains the `v0.5.0` alpha release. The import package remains
-`Pagonic` for compatibility; the distribution name is `pagonic`. The package is
-available on [PyPI](https://pypi.org/project/pagonic/) and the matching release
-is also available on [TestPyPI](https://test.pypi.org/project/pagonic/) for
-publication checks. The source and release artifacts remain available from the
-[GitHub release](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.0).
+The repository targets the `0.5.x` alpha release line. The import package
+remains `Pagonic` for compatibility; the distribution name is `pagonic`. The
+package is available on [PyPI](https://pypi.org/project/pagonic/) and
+[TestPyPI](https://test.pypi.org/project/pagonic/) for publication checks. The
+source and release artifacts remain available from the [latest GitHub
+release](https://github.com/SetraTheXX/pagonic/releases/latest).
 
 ## Project Story
 
@@ -44,10 +57,10 @@ After many iterations, I revised the project direction and narrowed the public s
 > Pagonic is not trying to be another desktop archive manager.
 > It is becoming a security-aware ZIP inspection and safe extraction toolkit.
 
-This `v0.5.0` release builds on the first cleaned-up public direction from
-`v0.4.0`. It keeps the useful ZIP core, CLI, tests, and safety work while making
-the inspection policy, regression corpus, automation examples, package surface,
-and compatibility boundaries explicit.
+The current `0.5.x` release line builds on the first cleaned-up public
+direction from `v0.4.0` and the trustworthy automation surface established in
+`v0.5.0`. It keeps the focused ZIP inspection, policy, and safe-extraction
+behavior explicit for package users and CI workflows.
 
 Pagonic is still evolving, but its purpose is now clearer: inspect first, extract safely.
 
@@ -239,10 +252,12 @@ commands and do not replace an inspection report.
 
 ## Status
 
-The current public release is `0.5.0`: an alpha-stage, test-backed release with
-security-aware ZIP inspection, explicit policy gates, a synthetic security
-regression corpus, gated safe extraction, core ZIP behavior, CLI support,
-optional GUI packaging, MIT license, and CI-ready tests.
+The current public release line is `0.5.x`: an alpha-stage, test-backed
+release with security-aware ZIP inspection, explicit policy gates, a synthetic
+security regression corpus, gated safe extraction, core ZIP behavior, CLI
+support, optional GUI packaging, MIT license, and CI-ready tests. The patch
+line keeps the adoption surface focused on clear documentation and package
+metadata; no new runtime feature is required for the core workflow.
 
 Pagonic is not intended for production-critical automation yet and is not
 positioned as a general multi-format desktop archive manager. The next work is
