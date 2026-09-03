@@ -60,8 +60,10 @@ not introduce a runtime feature or change the ZIP inspection policy.
   project links.
 - The CI integration example pins `pagonic==0.5.1` for reproducible usage.
 - The README demo source and rendered GIF use the current CLI version.
-- The remaining publication steps below require maintainer-controlled PyPI /
-  TestPyPI actions and a final clean-install check.
+- `v0.5.1` was published to TestPyPI and passed a clean Python 3.12 install
+  smoke test ([workflow run](https://github.com/SetraTheXX/pagonic/actions/runs/33726198587)).
+- The remaining publication steps below require the maintainer-controlled PyPI
+  action, a final clean-install check, and the GitHub release.
 
 ## Publish sequence
 

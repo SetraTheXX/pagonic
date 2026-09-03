@@ -41,8 +41,9 @@ The current release baseline includes:
 
 The previous `0.3.0` release established the initial cleaned-up alpha surface.
 The `0.4.0` release established the focused public API and package surface.
-The latest published package version is `0.5.0`; the repository is prepared for
-the `0.5.1` public metadata patch while the 0.5 milestone remains released.
+The latest PyPI package version is `0.5.0`; `v0.5.1` is published and
+smoke-tested on TestPyPI while its PyPI publication remains pending. The 0.5
+milestone remains released.
 
 ## 0.5.0 Released Milestone
 
@@ -195,7 +196,7 @@ release actions:
 - [x] Refresh the embedded README and public install path.
 - [x] Update the CI integration example and publishing checklist.
 - [x] Regenerate the inspect-first README demo for the current CLI version.
-- [ ] Publish and smoke-test `v0.5.1` on TestPyPI.
+- [x] Publish and smoke-test `v0.5.1` on TestPyPI ([workflow run](https://github.com/SetraTheXX/pagonic/actions/runs/33726198587)).
 - [ ] Publish and verify the same artifacts on PyPI.
 - [ ] Create the normal GitHub release and begin the public campaign.
 
