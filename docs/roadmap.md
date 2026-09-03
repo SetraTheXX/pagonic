@@ -41,9 +41,10 @@ The current release baseline includes:
 
 The previous `0.3.0` release established the initial cleaned-up alpha surface.
 The `0.4.0` release established the focused public API and package surface.
-The latest PyPI package version is `0.5.0`; `v0.5.1` is published and
-smoke-tested on TestPyPI while its PyPI publication remains pending. The 0.5
-milestone remains released.
+The latest PyPI package version is `0.5.1`; the patch release is published and
+smoke-tested on both TestPyPI and PyPI. Its normal GitHub release is available,
+and the project can now move from release preparation into measured public
+campaign and adoption work. The 0.5 milestone remains released.
 
 ## 0.5.0 Released Milestone
 
@@ -186,19 +187,20 @@ snapshot; this is a documentation freshness issue, not an installation or
 runtime blocker. The prepared `v0.5.1` patch release refreshes the embedded
 README and project URLs.
 
-### v0.5.1 public release preparation
+### v0.5.1 public release
 
-The patch release carries no runtime feature. Repository preparation is
-complete; the remaining steps require the maintainer's package-index and GitHub
-release actions:
+The patch release carries no runtime feature. Repository preparation,
+package-index publication, clean-install validation, and the normal GitHub
+release are complete:
 
 - [x] Align package, import, and compatibility-facade versions at `0.5.1`.
 - [x] Refresh the embedded README and public install path.
 - [x] Update the CI integration example and publishing checklist.
 - [x] Regenerate the inspect-first README demo for the current CLI version.
 - [x] Publish and smoke-test `v0.5.1` on TestPyPI ([workflow run](https://github.com/SetraTheXX/pagonic/actions/runs/33726198587)).
-- [ ] Publish and verify the same artifacts on PyPI.
-- [ ] Create the normal GitHub release and begin the public campaign.
+- [x] Publish and verify `v0.5.1` on PyPI ([workflow run](https://github.com/SetraTheXX/pagonic/actions/runs/33729529892)).
+- [x] Create the normal [GitHub release](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.1).
+- [ ] Begin the measured public campaign and collect adoption signals.
 
 No new issue is required for this bounded release-operations sequence; the
 existing seven 0.5 issues remain closed.

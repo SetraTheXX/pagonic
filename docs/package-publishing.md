@@ -49,10 +49,10 @@ README snapshot. This does not affect installation or runtime behavior. The
 prepared `v0.5.1` patch release carries the current README, project URLs, and
 public PyPI installation path.
 
-## v0.5.1 publication checklist
+## v0.5.1 publication record
 
-The repository is prepared for a metadata and onboarding patch release. It does
-not introduce a runtime feature or change the ZIP inspection policy.
+The `v0.5.1` metadata and onboarding patch release is published. It does not
+introduce a runtime feature or change the ZIP inspection policy.
 
 - `pyproject.toml`, `Pagonic.__version__`, and `HANDLER_VERSION` are aligned at
   `0.5.1`.
@@ -62,8 +62,12 @@ not introduce a runtime feature or change the ZIP inspection policy.
 - The README demo source and rendered GIF use the current CLI version.
 - `v0.5.1` was published to TestPyPI and passed a clean Python 3.12 install
   smoke test ([workflow run](https://github.com/SetraTheXX/pagonic/actions/runs/33726198587)).
-- The remaining publication steps below require the maintainer-controlled PyPI
-  action, a final clean-install check, and the GitHub release.
+- `v0.5.1` was published to PyPI after the `pypi` environment review
+  ([workflow run](https://github.com/SetraTheXX/pagonic/actions/runs/33729529892)).
+- A clean PyPI install smoke test passed for `pip check`, `pagonic --version`,
+  `inspect --json`, `verify`, `safe-extract --dry-run`, and real extraction.
+- The normal [GitHub release](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.1)
+  contains the wheel and source distribution from the verified PyPI publish run.
 
 ## Publish sequence
 
