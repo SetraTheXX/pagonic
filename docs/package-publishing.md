@@ -84,6 +84,11 @@ different checked-out tags, and tags that do not match the package version. It
 also rejects a distribution directory that does not contain exactly one wheel
 and one source distribution.
 
+The TestPyPI publish step allows safe reruns of an already uploaded validation
+version with `skip-existing`. The PyPI step intentionally remains strict and
+fails on duplicate filenames, so a duplicate PyPI result must not be handled by
+moving a tag or reusing a released version.
+
 ## TestPyPI smoke test
 
 Use a clean virtual environment and include the normal PyPI index so runtime
