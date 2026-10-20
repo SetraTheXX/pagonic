@@ -19,10 +19,19 @@ from Pagonic.core.formats.security import ZipConstants
 from Pagonic.core.formats.zip_reader import ZipReader
 
 
+MIN_RATIO_TEST_SIZE = 1024 * 1024
+
+
 def _make_zip(path, entries):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, data in entries.items():
             archive.writestr(name, data)
+
+
+def _make_zip_with_zero_files(path, file_sizes):
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
+        for index, size in enumerate(file_sizes):
+            archive.writestr(f"zeros-{index}.bin", bytes(size))
 
 
 def _mark_zip_entries_encrypted(path):
@@ -200,13 +209,140 @@ def test_inspect_reports_suspicious_extension(tmp_path):
 def test_inspect_reports_high_compression_ratio(tmp_path, monkeypatch):
     archive = tmp_path / "high-ratio.zip"
     monkeypatch.setattr(ZipConstants, "MAX_COMPRESSION_RATIO", 2)
-    _make_zip(archive, {"huge.txt": b"A" * 4096})
+    _make_zip(archive, {"huge.txt": b"A" * MIN_RATIO_TEST_SIZE})
 
     report = inspect_archive(archive)
 
     assert report.risk_level == "high"
     assert ArchiveRisk.HIGH_COMPRESSION_RATIO in report.risk_flags
     assert ArchiveRisk.HIGH_COMPRESSION_RATIO in report.entries[0].risk_flags
+
+
+def test_inspection_ratio_thresholds_are_centralized():
+    assert ZipConstants.MAX_COMPRESSION_RATIO == 100
+    assert ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE == MIN_RATIO_TEST_SIZE
+
+
+def test_inspect_reports_high_ratio_at_minimum_entry_size(tmp_path):
+    archive = tmp_path / "minimum-size-bomb.zip"
+    _make_zip(archive, {"zeros.bin": bytes(MIN_RATIO_TEST_SIZE)})
+
+    report = inspect_archive(archive)
+
+    assert report.entries[0].uncompressed_size == MIN_RATIO_TEST_SIZE
+    assert report.entries[0].compression_ratio > ZipConstants.MAX_COMPRESSION_RATIO
+    assert report.risk_level == "high"
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO in report.risk_flags
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO in report.entries[0].risk_flags
+
+
+def test_inspect_ignores_high_ratio_below_minimum_entry_size(tmp_path):
+    archive = tmp_path / "small-high-ratio.zip"
+    _make_zip(archive, {"spaces.txt": b" " * (100 * 1024)})
+
+    report = inspect_archive(archive)
+
+    assert report.entries[0].compression_ratio > 100
+    assert report.risk_level == "ok"
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO not in report.risk_flags
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO not in report.entries[0].risk_flags
+
+
+def test_inspect_checks_archive_total_ratio_when_entries_are_below_minimum_size(tmp_path):
+    archive = tmp_path / "aggregate-bomb.zip"
+    file_size = 100 * 1024
+    _make_zip_with_zero_files(archive, [file_size] * 11)
+
+    report = inspect_archive(archive)
+
+    assert report.total_uncompressed_size > MIN_RATIO_TEST_SIZE
+    assert all(entry.uncompressed_size < MIN_RATIO_TEST_SIZE for entry in report.entries)
+    assert all(
+        ArchiveRisk.HIGH_COMPRESSION_RATIO not in entry.risk_flags
+        for entry in report.entries
+    )
+    assert report.global_compression_ratio > ZipConstants.MAX_COMPRESSION_RATIO
+    assert report.risk_level == "high"
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO in report.risk_flags
+
+
+def test_inspect_applies_archive_size_floor_inclusively(tmp_path):
+    archive_below = tmp_path / "aggregate-below-floor.zip"
+    archive_at_floor = tmp_path / "aggregate-at-floor.zip"
+    file_size = 100 * 1024
+    below_sizes = [file_size] * 10
+    exact_sizes = below_sizes + [MIN_RATIO_TEST_SIZE - sum(below_sizes)]
+    _make_zip_with_zero_files(archive_below, below_sizes)
+    _make_zip_with_zero_files(archive_at_floor, exact_sizes)
+
+    below_report = inspect_archive(archive_below)
+    exact_report = inspect_archive(archive_at_floor)
+
+    assert below_report.total_uncompressed_size < MIN_RATIO_TEST_SIZE
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO not in below_report.risk_flags
+    assert exact_report.total_uncompressed_size == MIN_RATIO_TEST_SIZE
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO in exact_report.risk_flags
+    assert all(not entry.risk_flags for entry in exact_report.entries)
+
+
+def test_inspect_ratio_limit_is_strict_for_entry_and_archive(tmp_path, monkeypatch):
+    entry_archive = tmp_path / "entry-ratio-boundary.zip"
+    aggregate_archive = tmp_path / "aggregate-ratio-boundary.zip"
+    _make_zip(entry_archive, {"zeros.bin": bytes(MIN_RATIO_TEST_SIZE)})
+    _make_zip_with_zero_files(aggregate_archive, [600 * 1024, 600 * 1024])
+
+    entry_baseline = inspect_archive(entry_archive)
+    monkeypatch.setattr(
+        ZipConstants,
+        "MAX_COMPRESSION_RATIO",
+        entry_baseline.entries[0].compression_ratio,
+    )
+    entry_at_limit = inspect_archive(entry_archive)
+    monkeypatch.setattr(
+        ZipConstants,
+        "MAX_COMPRESSION_RATIO",
+        entry_baseline.entries[0].compression_ratio - 0.01,
+    )
+    entry_over_limit = inspect_archive(entry_archive)
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO not in entry_at_limit.risk_flags
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO in entry_over_limit.risk_flags
+
+    aggregate_baseline = inspect_archive(aggregate_archive)
+    monkeypatch.setattr(
+        ZipConstants,
+        "MAX_COMPRESSION_RATIO",
+        aggregate_baseline.global_compression_ratio,
+    )
+    aggregate_at_limit = inspect_archive(aggregate_archive)
+    monkeypatch.setattr(
+        ZipConstants,
+        "MAX_COMPRESSION_RATIO",
+        aggregate_baseline.global_compression_ratio - 0.01,
+    )
+    aggregate_over_limit = inspect_archive(aggregate_archive)
+
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO not in aggregate_at_limit.risk_flags
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO in aggregate_over_limit.risk_flags
+    assert all(
+        ArchiveRisk.HIGH_COMPRESSION_RATIO not in entry.risk_flags
+        for entry in aggregate_over_limit.entries
+    )
+
+
+def test_inspect_keeps_normal_large_code_archive_ok(tmp_path):
+    archive = tmp_path / "normal-code.zip"
+    source = "\n".join(
+        f'def handler_{index:06d}(request): return request.args.get("key_{index:06d}")'
+        for index in range(30000)
+    ).encode()
+    _make_zip(archive, {"handlers.py": source})
+
+    report = inspect_archive(archive)
+
+    assert report.total_uncompressed_size >= MIN_RATIO_TEST_SIZE
+    assert report.global_compression_ratio <= ZipConstants.MAX_COMPRESSION_RATIO
+    assert report.risk_level == "ok"
+    assert ArchiveRisk.HIGH_COMPRESSION_RATIO not in report.risk_flags
 
 
 def test_inspect_reports_too_many_files(tmp_path, monkeypatch):
@@ -358,7 +494,7 @@ def test_risk_flags_are_deterministic_catalog_order(tmp_path, monkeypatch):
         pytest.skip("Python bz2 support is unavailable")
 
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_BZIP2) as zip_file:
-        zip_file.writestr("../payload.exe", b"A" * 4096)
+        zip_file.writestr("../payload.exe", b"A" * MIN_RATIO_TEST_SIZE)
 
     report = inspect_archive(archive)
 

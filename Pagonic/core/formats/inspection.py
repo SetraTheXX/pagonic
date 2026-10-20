@@ -155,7 +155,10 @@ RISK_CATALOG: Dict[str, RiskDefinition] = {
         id=ArchiveRisk.HIGH_COMPRESSION_RATIO,
         title="High compression ratio",
         severity="high",
-        explanation="An entry expands much more than its compressed size, which may indicate ZIP bomb behavior.",
+        explanation=(
+            "An entry or the archive as a whole expands beyond the configured ratio "
+            "once its uncompressed size reaches the minimum, which may indicate ZIP bomb behavior."
+        ),
         recommended_action="Do not extract automatically. Inspect in a constrained environment if analysis is required.",
     ),
     ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD: RiskDefinition(
@@ -415,6 +418,16 @@ def inspect_archive(zip_path: str | Path) -> ArchiveInspectionReport:
     if total_uncompressed > ZipConstants.MAX_UNCOMPRESSED_SIZE:
         report_risks.append(ArchiveRisk.LARGE_UNCOMPRESSED_SIZE)
         warnings.append(f"Archive exceeds uncompressed size limit: {total_uncompressed}")
+    if (
+        total_uncompressed >= ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE
+        and _ratio(total_uncompressed, total_compressed) > ZipConstants.MAX_COMPRESSION_RATIO
+    ):
+        report_risks.append(ArchiveRisk.HIGH_COMPRESSION_RATIO)
+        warnings.append(
+            "Archive total compression ratio exceeds the configured limit: "
+            f"{_ratio(total_uncompressed, total_compressed):.1f}:1 "
+            f"(limit: {ZipConstants.MAX_COMPRESSION_RATIO}:1)"
+        )
 
     all_risks = _dedupe(report_risks + [risk for entry in entries for risk in entry.risk_flags])
     risk_level = _highest_risk_level(all_risks)
@@ -437,7 +450,10 @@ def _inspect_entry(info: zipfile.ZipInfo) -> ArchiveEntryReport:
     risk_flags = _analyze_archive_path(info.filename)
     ratio = _ratio(info.file_size, info.compress_size)
 
-    if info.file_size > 0 and info.compress_size > 0 and ratio > ZipConstants.MAX_COMPRESSION_RATIO:
+    if (
+        info.file_size >= ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE
+        and ratio > ZipConstants.MAX_COMPRESSION_RATIO
+    ):
         risk_flags.append(ArchiveRisk.HIGH_COMPRESSION_RATIO)
     if not CompressionMethods.is_supported(info.compress_type):
         risk_flags.append(ArchiveRisk.UNSUPPORTED_COMPRESSION_METHOD)

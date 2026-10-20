@@ -57,7 +57,7 @@ def test_ci_documentation_explains_both_gates_and_failure_behavior():
     assert "Create demo archive" in documentation
     assert "Replace the demo-archive step" in documentation
     assert "Install Pagonic from PyPI" in documentation
-    assert 'pagonic==0.5.1' in documentation
+    assert 'pagonic==0.5.2' in documentation
     assert "not published to PyPI or TestPyPI" not in documentation
 
 

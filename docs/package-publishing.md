@@ -71,14 +71,15 @@ introduce a runtime feature or change the ZIP inspection policy.
 
 ## Publish sequence
 
-1. Create and push the matching `v0.5.1` tag for package version `0.5.1`.
+1. Create and push the matching `v<VERSION>` tag for package version
+   `<VERSION>`.
 2. Run **Publish package** manually from `main`, enter the matching source tag,
    and select `testpypi`.
 3. Install from TestPyPI in a clean virtual environment and run the CLI smoke
    checks before considering a PyPI publication.
 4. Run the same workflow from `main` with the same source tag and `pypi`
    selected only after the TestPyPI smoke test and release audit pass.
-5. Create a normal GitHub release for `v0.5.1` and attach the exact wheel and
+5. Create a normal GitHub release for `v<VERSION>` and attach the exact wheel and
    source distribution produced by the verified publish build.
 6. Re-check the rendered PyPI description, `python -m pip install pagonic`,
    `pagonic --version`, and the README links before starting the campaign.

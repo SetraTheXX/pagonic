@@ -41,7 +41,7 @@ jobs:
       - name: Install Pagonic from PyPI
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "pagonic==0.5.1"
+          python -m pip install "pagonic==0.5.2"
 
       - name: Create demo archive
         run: |

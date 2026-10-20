@@ -203,6 +203,30 @@ class TestCompressionLevels:
 
 class TestLargeFiles:
     """Test large file handling."""
+
+    def test_10mb_repetitive_binary_is_refused_by_ratio_policy(self):
+        """Highly repetitive legitimate data can be refused by the safety policy."""
+        from Pagonic.core.formats.inspection import ArchiveRisk, inspect_archive
+        from Pagonic.core.formats.security import SecurityError
+        from Pagonic.core.formats.zip_reader import ZipReader
+        from Pagonic.core.formats.zip_writer import ZipWriter
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            source = tmpdir / "repetitive.bin"
+            create_test_file(source, 10 * 1024 * 1024, "binary")
+
+            zip_path = tmpdir / "repetitive.zip"
+            writer = ZipWriter(str(zip_path))
+            writer.add_file(str(source))
+            writer.finalize()
+
+            report = inspect_archive(zip_path)
+            assert report.risk_level == "high"
+            assert ArchiveRisk.HIGH_COMPRESSION_RATIO in report.risk_flags
+
+            with pytest.raises(SecurityError, match="compression ratio"):
+                ZipReader(str(zip_path))
     
     def test_10mb_file(self):
         """Test 10MB file roundtrip"""
@@ -213,7 +237,7 @@ class TestLargeFiles:
             tmpdir = Path(tmpdir)
             
             source = tmpdir / "large.bin"
-            create_test_file(source, 10 * 1024 * 1024, "binary")  # 10MB
+            create_test_file(source, 10 * 1024 * 1024, "random")  # 10MB
             original_hash = get_file_hash(source)
             
             # Compress

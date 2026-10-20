@@ -33,15 +33,30 @@ class TestZipBombDetection:
         finally:
             tmp_path.unlink(missing_ok=True)
 
-    @pytest.mark.skip(reason="Real ZIP bombs have 100000:1+ ratio, our 10000 threshold prevents false positives")
-    def test_high_compression_ratio_detected(self):
-        """Test that suspicious compression ratios are detected.
-        
-        Note: Skipped because realistic test data rarely exceeds 10000:1 ratio.
-        Real ZIP bombs use nested archives to achieve 100000:1+ ratios.
-        Our 10000 threshold balances security and false positive prevention.
-        """
-        pass
+    def test_high_compression_ratio_detected(self, tmp_path):
+        """Reject a highly compressible entry once it reaches the size floor."""
+        archive_path = tmp_path / "high-ratio.zip"
+        with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("zeros.bin", bytes(ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE))
+
+        with pytest.raises(SecurityError, match="compression ratio"):
+            validate_zip_safety(archive_path)
+
+    def test_small_high_ratio_entry_is_below_the_size_floor(self, tmp_path):
+        archive_path = tmp_path / "small-high-ratio.zip"
+        with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("spaces.txt", b" " * (100 * 1024))
+
+        validate_zip_safety(archive_path)
+
+    def test_archive_total_compression_ratio_is_checked(self, tmp_path):
+        archive_path = tmp_path / "aggregate-ratio.zip"
+        with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for index in range(11):
+                zf.writestr(f"zeros-{index}.bin", bytes(100 * 1024))
+
+        with pytest.raises(SecurityError, match="compression ratio"):
+            validate_zip_safety(archive_path)
 
     def test_size_limit_exceeded(self):
         """Test that total uncompressed size limit is enforced."""
@@ -111,7 +126,8 @@ class TestZipBombDetection:
     def test_constants_are_reasonable(self):
         """Test that security constants have reasonable values."""
         assert ZipConstants.MAX_UNCOMPRESSED_SIZE == 10 * 1024 ** 3  # 10GB
-        assert ZipConstants.MAX_COMPRESSION_RATIO == 10000  # 1:10000 (prevents false positives)
+        assert ZipConstants.MAX_COMPRESSION_RATIO == 100  # 100:1 ZIP bomb threshold
+        assert ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE == 1024 ** 2  # 1 MiB
         assert ZipConstants.MAX_PATH_LENGTH == 256
         assert ZipConstants.MAX_FILES_IN_ZIP == 100000
 

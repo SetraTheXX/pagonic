@@ -185,5 +185,8 @@ def build_large_uncompressed_fixture(path: Path) -> Path:
 
 
 def build_high_ratio_fixture(path: Path) -> Path:
-    """Create a small repetitive payload for a patched ratio limit."""
-    return _write_entries(path, [("repetitive.txt", b"A" * 4096)])
+    """Create a minimum-sized repetitive payload for a patched ratio limit."""
+    return _write_entries(
+        path,
+        [("repetitive.txt", b"A" * ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE)],
+    )

@@ -555,6 +555,25 @@ class TestSafeExtractCommand:
             assert 'no files were written' in result.output
             assert not Path('out/evil.txt').exists()
 
+    def test_safe_extract_refuses_50_mib_high_ratio_zip_before_writing(self, runner):
+        with runner.isolated_filesystem():
+            with zipfile.ZipFile('bomb.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('zeros.bin', bytes(50 * 1024 * 1024))
+
+            inspection = runner.invoke(cli, ['inspect', 'bomb.zip', '--json'])
+            report = json.loads(inspection.output)
+
+            assert inspection.exit_code == 0
+            assert report['risk_level'] == 'high'
+            assert 'high_compression_ratio' in report['risk_flags']
+
+            result = runner.invoke(cli, ['safe-extract', 'bomb.zip', 'out'])
+
+            assert result.exit_code == 1
+            assert 'Refused' in result.output
+            assert 'no files were written' in result.output
+            assert not Path('out').exists()
+
     def test_safe_extract_override_keeps_output_inside_target(self, runner):
         with runner.isolated_filesystem():
             with zipfile.ZipFile('risky.zip', 'w', zipfile.ZIP_DEFLATED) as archive:

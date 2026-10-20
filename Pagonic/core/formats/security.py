@@ -23,10 +23,8 @@ class ZipConstants:
     """Security-related constants for ZIP validation."""
 
     MAX_UNCOMPRESSED_SIZE = 10 * 1024 ** 3  # 10GB uncompressed limit
-    MAX_COMPRESSION_RATIO = 10000  # 1:10000 compression ratio limit (ZIP bomb detection)
-    # Note: Increased from 1000 to 10000 to prevent false positives on 
-    # highly compressible text/repeated data. Real ZIP bombs typically
-    # have ratios of 100,000:1 or higher.
+    MAX_COMPRESSION_RATIO = 100  # Flag compression ratios above 100:1
+    MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE = 1 * 1024 ** 2  # 1 MiB ratio-check floor
     MAX_PATH_LENGTH = 256  # Maximum filename length
     MAX_ARCHIVE_COMMENT_LENGTH = 4096  # Review unusually large archive comments
     MAX_FILES_IN_ZIP = 100000  # Maximum number of files in ZIP
@@ -38,7 +36,8 @@ def validate_zip_safety(zip_path: Path) -> None:
 
     Checks:
     1. Total uncompressed size doesn't exceed MAX_UNCOMPRESSED_SIZE
-    2. Compression ratio for each file doesn't exceed MAX_COMPRESSION_RATIO
+    2. Entry and archive compression ratios stay within MAX_COMPRESSION_RATIO
+       once the applicable uncompressed size reaches the configured floor
     3. Total number of files doesn't exceed MAX_FILES_IN_ZIP
 
     Args:
@@ -51,6 +50,7 @@ def validate_zip_safety(zip_path: Path) -> None:
     try:
         with zipfile.ZipFile(zip_path, 'r') as zf:
             total_uncompressed = 0
+            total_compressed = 0
             file_count = 0
 
             for info in zf.infolist():
@@ -65,6 +65,7 @@ def validate_zip_safety(zip_path: Path) -> None:
 
                 # Check total uncompressed size
                 total_uncompressed += info.file_size
+                total_compressed += info.compress_size
                 if total_uncompressed > ZipConstants.MAX_UNCOMPRESSED_SIZE:
                     raise SecurityError(
                         f"ZIP file exceeds uncompressed size limit: "
@@ -72,8 +73,8 @@ def validate_zip_safety(zip_path: Path) -> None:
                         f"(limit: {ZipConstants.MAX_UNCOMPRESSED_SIZE:,} bytes)"
                     )
 
-                # Check compression ratio (ZIP bomb detection)
-                if info.file_size > 0 and info.compress_size > 0:
+                # Ignore tiny highly-compressible files to avoid false positives.
+                if info.file_size >= ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE:
                     ratio = info.file_size / max(info.compress_size, 1)
                     if ratio > ZipConstants.MAX_COMPRESSION_RATIO:
                         raise SecurityError(
@@ -82,6 +83,18 @@ def validate_zip_safety(zip_path: Path) -> None:
                             f"(limit: {ZipConstants.MAX_COMPRESSION_RATIO}:1) - "
                             f"Possible ZIP bomb attack"
                         )
+
+            # Aggregate checks catch many sub-threshold entries that are
+            # individually too small to trigger the per-entry ratio guard.
+            if total_uncompressed >= ZipConstants.MIN_COMPRESSION_RATIO_UNCOMPRESSED_SIZE:
+                total_ratio = total_uncompressed / max(total_compressed, 1)
+                if total_ratio > ZipConstants.MAX_COMPRESSION_RATIO:
+                    raise SecurityError(
+                        f"Suspicious archive compression ratio detected: "
+                        f"{total_ratio:.1f}:1 "
+                        f"(limit: {ZipConstants.MAX_COMPRESSION_RATIO}:1) - "
+                        f"Possible ZIP bomb attack"
+                    )
 
     except zipfile.BadZipFile as e:
         raise ValidationError(f"Invalid or corrupted ZIP file: {e}")

@@ -26,6 +26,27 @@ selects `--max-risk critical` or `--allow-risk critical`.
 | `verify` | `--max-risk` | `low` | Exit `0` only for reports at or below `low` with no validation errors. |
 | `safe-extract` | `--allow-risk` | `medium` | Write files only for reports at or below `medium` with no validation errors and no unsupported methods. |
 
+## Compression ratio and nested archives
+
+`high_compression_ratio` is reported when an entry's or the archive's total
+uncompressed-to-compressed ratio is strictly greater than `100:1`. The check
+applies only when the corresponding uncompressed size is at least `1 MiB`:
+the floor is applied to each entry and separately to the archive total. This
+avoids flagging tiny, highly-compressible files while still catching an archive
+made up of many individually-small entries. The previous `10,000:1` threshold
+was above the roughly `1,032:1` upper bound of a single Deflate stream, so it
+could not detect single-layer Deflate ZIP bombs; `100:1` is reachable by
+Deflate. This is a heuristic threshold, not a complete decompression budget:
+large benign repetitive files can exceed it and be refused by `safe-extract`
+under its default `medium` risk policy.
+Conversely, incompressible padding can dilute an archive-wide ratio below
+`100:1`, and entries at or below `100:1` do not receive this ratio flag. The
+separate `10 GiB` uncompressed-size limit still applies.
+
+Pagonic marks nested archives as `nested_archive` but does not inspect them
+recursively because repeated decompression could multiply CPU and memory use
+without a predictable bound.
+
 ## Decision table
 
 The policy compares the report's overall risk level with the workflow's

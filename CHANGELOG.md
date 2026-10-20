@@ -8,6 +8,14 @@ changes; future work belongs in [the roadmap](docs/roadmap.md).
 - Future work remains evidence-driven maintenance; no new runtime feature is
   implied by the public packaging work below.
 
+## 0.5.2 - ZIP compression-ratio safety (2026-10-20)
+
+- Flag entries and archive totals above `100:1` once the applicable
+  uncompressed size reaches `1 MiB`; `safe-extract` refuses affected high-risk
+  archives by default. This heuristic may reject large benign repetitive
+  files, while incompressible padding can dilute an archive total below the
+  threshold.
+
 ## 0.5.1 - Public package metadata and onboarding refresh
 
 - Added project URLs and a manually dispatched Trusted Publishing workflow that
