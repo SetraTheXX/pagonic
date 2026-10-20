@@ -46,8 +46,27 @@ The package source and version were unchanged.
 Because `v0.5.0` is immutable and was built from the release tag before this
 publication follow-up, its embedded project description is the pre-publication
 README snapshot. This does not affect installation or runtime behavior. The
-prepared `v0.5.1` patch release carries the current README, project URLs, and
-public PyPI installation path.
+`v0.5.1` patch release carried the updated README, project URLs, and public
+PyPI installation path.
+
+## v0.5.2 publication record
+
+The `v0.5.2` ZIP compression-ratio safety release was published on 2026-10-20.
+
+- The [main CI run](https://github.com/SetraTheXX/pagonic/actions/runs/39490331563)
+  passed on Python 3.10 through 3.13 on Linux and Windows, including tests,
+  package builds, and wheel smoke tests.
+- The package passed the [TestPyPI workflow](https://github.com/SetraTheXX/pagonic/actions/runs/39490609982)
+  and a clean Windows install/CLI smoke test, then was published to PyPI by
+  the [approved PyPI workflow](https://github.com/SetraTheXX/pagonic/actions/runs/39490844964).
+- A clean Windows PyPI install passed `pip check`, `pagonic --version`,
+  `inspect --json`, `verify`, and `safe-extract --dry-run`.
+- The [GitHub release](https://github.com/SetraTheXX/pagonic/releases/tag/v0.5.2)
+  contains the exact wheel and source distribution from the verified PyPI
+  workflow: `pagonic-0.5.2-py3-none-any.whl` (SHA-256
+  `ffe04f2217169fd54bcd9aec89d3396299044a8474aad79c539cd4803047d576`) and
+  `pagonic-0.5.2.tar.gz` (SHA-256
+  `a505e172fab6161ac888430eb3b3546477bfc133adf71367db61b263185a226d`).
 
 ## v0.5.1 publication record
 
